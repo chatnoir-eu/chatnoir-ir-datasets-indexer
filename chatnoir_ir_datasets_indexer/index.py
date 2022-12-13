@@ -262,6 +262,7 @@ def _iter_actions(
         s3_bucket: Optional[str],
         dataset_id: str,
         docs_iter: Iterator[_Document],
+        verbose: bool,
 ) -> Iterator[Mapping[str, str]]:
     dataset_base_dir = _dataset_base_dir(dataset_id)
     doc_id_prefix = _doc_id_prefix(dataset_id)
@@ -292,7 +293,8 @@ def _iter_actions(
             yield meta_action
             yield data_action
         except _SkipRecord as e:
-            print(f"Skipping document {doc.doc_id}: {e}")
+            if verbose:
+                print(f"Skipping document {doc.doc_id}: {e}")
             continue
 
 
@@ -360,6 +362,7 @@ def index(
         start: Optional[int],
         end: Optional[int],
         dataset_id: str,
+        verbose: bool,
 ) -> None:
     client = Elasticsearch(
         hosts=[es_host],
@@ -379,6 +382,7 @@ def index(
         s3_bucket,
         dataset_id,
         docs_iter,
+        verbose=verbose
     )
     actions = (dict(action) for action in actions)
 
