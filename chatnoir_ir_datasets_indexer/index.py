@@ -389,12 +389,13 @@ def index(
     results = streaming_bulk(
         client,
         actions,
+        chunk_size=100,
         yield_ok=True,
         max_retries=10,
         initial_backoff=60,
         max_backoff=3600,
         timeout="5m",
-        raise_on_error=False,
+        request_timeout=300,
     )
     results = tqdm(
         results,
