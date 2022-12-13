@@ -9,14 +9,14 @@ def extract_title(html_tree: HTMLTree) -> str:
     """
     Heuristically extract a document title from an HTML tree.
     """
-    selectors = (
-        lambda: html_tree.title,
-        lambda: html_tree.body.query_selector("h1"),
-        lambda: html_tree.body.query_selector("h2"),
-        lambda: html_tree.body.query_selector(".title"),
-    )
-    for selector in selectors:
-        element = selector()
+    title = html_tree.title
+    if title is not None:
+        title = collapse_whitespace(title)
+    if title is not None and len(title) > 0:
+        return title
+
+    for selector in ("h1", "h2", ".title"):
+        element = html_tree.body.query_selector(selector)
         if element is None:
             continue
         title = element.text
