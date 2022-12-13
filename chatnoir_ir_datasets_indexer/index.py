@@ -3,6 +3,8 @@ from pathlib import Path
 from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping
 from urllib.parse import urlparse
 
+from elasticsearch import Elasticsearch
+from elasticsearch.helpers import streaming_bulk
 from ir_datasets import load
 from ir_datasets.datasets.base import Dataset
 from ir_datasets.formats import ClueWeb22BDoc
@@ -16,6 +18,10 @@ from chatnoir_ir_datasets_indexer.elasticsearch import index_action
 from chatnoir_ir_datasets_indexer.html import extract_title, \
     extract_meta_description, extract_meta_keywords, \
     extract_headings
+from chatnoir_ir_datasets_indexer.index_data import SETTINGS_DATA, \
+    MAPPINGS_DATA
+from chatnoir_ir_datasets_indexer.index_meta import SETTINGS_META, \
+    MAPPINGS_META
 from chatnoir_ir_datasets_indexer.text import collapse_whitespace
 from chatnoir_ir_datasets_indexer.webis import webis_uuid, webis_index_uuid
 
@@ -109,7 +115,7 @@ def _meta_record(
             "warc_type": "response",
             "warc_target_uri": doc.url,
             "warc_target_uri_hash": doc.url_hash,
-            "warc_date": doc.date.isoformat(),
+            "warc_date": doc.date.isoformat(timespec="seconds"),
             "warc_record_id": doc.record_id,
             "warc_trec_id": doc.doc_id,
             "warc_payload_digest": doc.payload_digest,
@@ -205,11 +211,12 @@ def _data_record(
         )
 
 
+
 def _docs_iter(
-        dataset_id: str,
         start: Optional[int],
         end: Optional[int],
-) -> Iterator[_Document]:
+        dataset_id: str,
+) -> Tuple[Iterator[_Document], int, int]:
     dataset: Dataset = load(dataset_id)
     if not dataset.has_docs():
         raise ValueError(f"Dataset {dataset_id} has no documents.")
@@ -228,14 +235,16 @@ def _docs_iter(
     if end < 0:
         end = total + end
     total = end - start
+    initial = start
 
     # noinspection PyTypeChecker
     docs_iter = tqdm(
         docs_iter,
+        initial=initial,
         total=total,
         desc=f"Iterate dataset {dataset_id}"
     )
-    return docs_iter
+    return docs_iter, initial, total
 
 
 def _doc_id_prefix(dataset_id: str) -> str:
@@ -247,22 +256,15 @@ def _doc_id_prefix(dataset_id: str) -> str:
     )
 
 
-def index(
-        es_host: str,
-        es_username: str,
-        es_password: str,
-        es_index_meta: Optional[str],
-        es_index_data: Optional[str],
+def _iter_actions(
+        es_index_meta: str,
+        es_index_data: str,
         s3_bucket: Optional[str],
-        start: Optional[int],
-        end: Optional[int],
         dataset_id: str,
-) -> None:
-    if es_index_meta is None and es_index_data is None:
-        raise ValueError("At least a meta index or data index must be set.")
+        docs_iter: Iterator[_Document],
+) -> Iterator[Mapping[str, str]]:
     dataset_base_dir = _dataset_base_dir(dataset_id)
     doc_id_prefix = _doc_id_prefix(dataset_id)
-    docs_iter = _docs_iter(dataset_id, start, end)
     for doc in docs_iter:
         path, offset = _warc_file_info(
             doc,
@@ -282,23 +284,121 @@ def index(
             webis_id,
         )
 
-        if es_index_meta is not None:
-            meta: Mapping[str, str]
-            try:
-                meta = _meta_record(
-                    webis_id, doc, dataset_id, file_name, offset
-                )
-            except _SkipRecord as e:
-                print(f"Skipping meta record for {webis_id}: {e}")
-                continue
+        try:
+            meta = _meta_record(webis_id, doc, dataset_id, file_name, offset            )
+            data = _data_record(webis_id, doc, dataset_id)
             meta_action = index_action(webis_index_id, es_index_meta, meta)
-            print(f"Indexing meta record for {webis_id}: {meta_action}")
-        if es_index_data is not None:
-            data: Mapping[str, str]
-            try:
-                data = _data_record(webis_id, doc, dataset_id)
-            except _SkipRecord as e:
-                print(f"Skipping data record for {webis_id}: {e}")
-                continue
             data_action = index_action(webis_index_id, es_index_data, data)
-            print(f"Indexing data record for {webis_id}: {data_action}")
+            yield meta_action
+            yield data_action
+        except _SkipRecord as e:
+            print(f"Skipping meta record for {webis_id}: {e}")
+            continue
+
+
+def _exists_index(es: Elasticsearch, es_index: str) -> bool:
+    response = es.indices.exists(index=es_index)
+    return response.meta.status == 200
+
+
+def _num_shards_replicas(dataset_id: str) -> Tuple[int, int]:
+    if dataset_id.startswith("clueweb22"):
+        return 1, 0
+        # return 20, 2
+    raise NotImplementedError(
+        f"Number of shards and replicas for ir_dataset {dataset_id} "
+        f"is not implemented yet."
+    )
+
+
+def _create_data_index(
+        es: Elasticsearch,
+        es_index: str,
+        dataset_id: str,
+) -> bool:
+    num_shards, num_replicas = _num_shards_replicas(dataset_id)
+    response = es.indices.create(
+        index=es_index,
+        settings={
+            **SETTINGS_DATA,
+            "index": {
+                "number_of_shards": num_shards,
+                "number_of_replicas": num_replicas,
+            },
+        },
+        mappings=MAPPINGS_DATA,
+    )
+    return response.meta.status == 200
+
+
+def _create_meta_index(
+        es: Elasticsearch,
+        es_index: str,
+        dataset_id: str,
+) -> bool:
+    num_shards, num_replicas = _num_shards_replicas(dataset_id)
+    response = es.indices.create(
+        index=es_index,
+        settings={
+            **SETTINGS_META,
+            "index": {
+                "number_of_shards": num_shards,
+                "number_of_replicas": num_replicas,
+            },
+        },
+        mappings=MAPPINGS_META,
+    )
+    return response.meta.status == 200
+
+
+def index(
+        es_host: str,
+        es_username: str,
+        es_password: str,
+        es_index_meta: str,
+        es_index_data: str,
+        s3_bucket: Optional[str],
+        start: Optional[int],
+        end: Optional[int],
+        dataset_id: str,
+) -> None:
+    client = Elasticsearch(
+        hosts=[es_host],
+        http_auth=(es_username, es_password),
+    )
+    if not _exists_index(client, es_index_meta):
+        _create_meta_index(client, es_index_meta, dataset_id)
+    if not _exists_index(client, es_index_data):
+        _create_data_index(client, es_index_data, dataset_id)
+
+    docs_iter, initial, total = _docs_iter( start, end, dataset_id)
+    total_actions = (total - initial) * 2
+
+    actions = _iter_actions(
+        es_index_meta,
+        es_index_data,
+        s3_bucket,
+        dataset_id,
+        docs_iter,
+    )
+    actions = (dict(action) for action in actions)
+
+    results = streaming_bulk(
+        client,
+        actions,
+        yield_ok=True,
+        max_retries=10,
+        initial_backoff=60,
+        max_backoff=3600,
+        timeout="5m",
+        raise_on_error=False,
+    )
+    results = tqdm(
+        results,
+        desc=f"Index dataset {dataset_id}",
+        unit="action",
+        total=total_actions,
+    )
+    for ok, item in results:
+        if not ok:
+            raise Exception(f"Failed to index with error: {item}")

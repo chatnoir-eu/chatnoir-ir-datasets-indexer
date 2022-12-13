@@ -1,4 +1,4 @@
-MAPPING = {
+MAPPINGS_META = {
     "properties": {
         "uuid": {
             "type": "keyword"
@@ -48,7 +48,7 @@ MAPPING = {
     ]
 }
 
-SETTINGS = {
+SETTINGS_META = {
     "codec": "best_compression",
     "refresh_interval": "-1"
 }

@@ -1,4 +1,4 @@
-MAPPING = {
+MAPPINGS_DATA = {
     "_source": {
         "enabled": True,
         "excludes": [
@@ -377,7 +377,7 @@ MAPPING = {
     ]
 }
 
-SETTINGS = {
+SETTINGS_DATA = {
     "refresh_interval": "-1",
     "analysis": {
         "filter": {
