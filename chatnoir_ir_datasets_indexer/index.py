@@ -158,7 +158,7 @@ def _data_record(
             alt_texts=True,
             preserve_formatting=False,
         )
-        if not content_full:
+        if len(content_full) <= 0:
             raise _SkipRecord(
                 "Document empty after full content extraction"
             )
@@ -180,6 +180,9 @@ def _data_record(
             )
 
         parse_url = urlparse(doc.url)
+        title = extract_title(html_tree)
+        meta_keywords = extract_meta_keywords(html_tree)
+        meta_description = extract_meta_description(html_tree)
 
         return {
             "uuid": webis_id,
@@ -194,12 +197,10 @@ def _data_record(
             "lang": doc.language,
             "content_type": "text/html",
             "body_length": len(doc.html),
-            f"title_lang_{doc.language}": extract_title(html_tree),
-            f"meta_keywords_{doc.language}":
-                extract_meta_keywords(html_tree)[:8192],
-            f"meta_desc_lang_{doc.language}":
-                extract_meta_description(html_tree)[:8192],
-            f"body_lang_{doc.language}": doc.text,
+            f"title_lang_{doc.language}": title,
+            f"meta_keywords_{doc.language}": meta_keywords,
+            f"meta_desc_lang_{doc.language}": meta_description,
+            f"body_lang_{doc.language}": main_content,
             f"full_body_lang_{doc.language}": content_full,
             f"headings_lang_{doc.language}":
                 extract_headings(html_tree, 3),
@@ -209,7 +210,6 @@ def _data_record(
             f"Metadata extraction for ir_dataset {dataset_id} "
             f"is not implemented yet."
         )
-
 
 
 def _docs_iter(
@@ -285,14 +285,14 @@ def _iter_actions(
         )
 
         try:
-            meta = _meta_record(webis_id, doc, dataset_id, file_name, offset            )
+            meta = _meta_record(webis_id, doc, dataset_id, file_name, offset)
             data = _data_record(webis_id, doc, dataset_id)
             meta_action = index_action(webis_index_id, es_index_meta, meta)
             data_action = index_action(webis_index_id, es_index_data, data)
             yield meta_action
             yield data_action
         except _SkipRecord as e:
-            print(f"Skipping meta record for {webis_id}: {e}")
+            print(f"Skipping document {doc.doc_id}: {e}")
             continue
 
 
@@ -303,8 +303,7 @@ def _exists_index(es: Elasticsearch, es_index: str) -> bool:
 
 def _num_shards_replicas(dataset_id: str) -> Tuple[int, int]:
     if dataset_id.startswith("clueweb22"):
-        return 1, 0
-        # return 20, 2
+        return 20, 2
     raise NotImplementedError(
         f"Number of shards and replicas for ir_dataset {dataset_id} "
         f"is not implemented yet."
@@ -371,7 +370,7 @@ def index(
     if not _exists_index(client, es_index_data):
         _create_data_index(client, es_index_data, dataset_id)
 
-    docs_iter, initial, total = _docs_iter( start, end, dataset_id)
+    docs_iter, initial, total = _docs_iter(start, end, dataset_id)
     total_actions = (total - initial) * 2
 
     actions = _iter_actions(
