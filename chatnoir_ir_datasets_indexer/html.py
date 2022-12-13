@@ -2,7 +2,7 @@ from typing import Sequence
 
 from resiliparse.parse.html import HTMLTree
 
-from chatnoir_ir_datasets_indexer import _collapse_whitespace
+from chatnoir_ir_datasets_indexer.text import collapse_whitespace
 
 
 def extract_title(html_tree: HTMLTree) -> str:
@@ -22,7 +22,7 @@ def extract_title(html_tree: HTMLTree) -> str:
         title = element.text
         if title is None:
             continue
-        title = _collapse_whitespace(title)
+        title = collapse_whitespace(title)
         if title is None or len(title) == 0:
             continue
         return title
@@ -40,7 +40,7 @@ def extract_meta_description(html_tree: HTMLTree) -> str:
     if element is None:
         return ''
 
-    return _collapse_whitespace(element.getattr('content', ''))
+    return collapse_whitespace(element.getattr('content', ''))
 
 
 def extract_meta_keywords(
@@ -63,7 +63,7 @@ def extract_meta_keywords(
         return []
 
     keywords = [
-        _collapse_whitespace(keyword)[:max_keyword_length].lower()
+        collapse_whitespace(keyword)[:max_keyword_length].lower()
         for keyword in element.getattr("content", "").split(",")
     ]
     unique_keywords = []
@@ -95,7 +95,7 @@ def extract_headings(
 
     elements = html_tree.head.query_selector_all(selector)
     headings = (
-        _collapse_whitespace(element.text)
+        collapse_whitespace(element.text)
         for element in elements
         if element.text is not None
     )
