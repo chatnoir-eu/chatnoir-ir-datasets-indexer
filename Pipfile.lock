@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6c6d4e6163dbe6ff0a05d777946aa102e454f012b3fbc0d3ddde5f081f6e052d"
+            "sha256": "66e88da14b943a6ad482a6649c37010282a0534837112a0912b6ee612a19c5f7"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -757,6 +757,25 @@
             "markers": "python_version >= '3.7' and python_version < '4'",
             "version": "==2.28.1"
         },
+        "resiliparse": {
+            "hashes": [
+                "sha256:035187db1ad4986525b7c0a5506f46e05eb698c25dc7e9455e150f9bd6563258",
+                "sha256:093148a8ade5183ad8a79edbcfd13029bc0e232c8e5ea1b9bd58e4bd6bff6788",
+                "sha256:0eb18908edf9a97cd473bf571a7195d7ced99ceee90acb40998cc3fbfab32bfa",
+                "sha256:33ac8c59bf0aaa2219c718bfe4bde82e2e155bfdc3bfb9616433d1acb1115803",
+                "sha256:49b7f189042780dc1aa13841cc4fa4baa762f0744d12ecdba6bac3fa49d5b054",
+                "sha256:4bece7161b0ad8237ea2f77c5d57998ebc90841273ed398d31f0529d1944ec8f",
+                "sha256:4c689e51e1447f605c94986e0f0576acc21b62a47806b6834211cce8d20c749f",
+                "sha256:513031d8f6d2c3ed0b6a529de8f1f62c3cd389149a76ff78aa98a76120f22db9",
+                "sha256:5aa7615d15fa298fc3ae2cecb9389b31c2738e14ed7136626303788c9451637e",
+                "sha256:6d30d7f9134f6e9df7d96c6b3dcd8b1458ac2f1cd626e6fafd7e16f851110810",
+                "sha256:848ecd9b262007e03b08ad2559d414ff66beaa20f7519cd50b270a6ced527f0b",
+                "sha256:91e9187ad12b72903fdf1d48bef8a0eb8d3350fbd74ed6ac8b63fe94720752e8",
+                "sha256:e6115819870122bb4377107ddf191211f90b6923c87e5e1f65ac0a23795b0e25"
+            ],
+            "index": "pypi",
+            "version": "==0.13.7"
+        },
         "soupsieve": {
             "hashes": [
                 "sha256:3b2503d3c7084a42b1ebd08116e5f81aadfaea95863628c80a3b774a11b7c759",
@@ -770,7 +789,7 @@
                 "sha256:5f4f682a004951c1b450bc753c710e9280c5746ce6ffedee253ddbcbf54cf1e4",
                 "sha256:6fee160d6ffcd1b1c68c65f14c829c22832bc401726335ce92c52d395944a6a1"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+            "index": "pypi",
             "version": "==4.64.1"
         },
         "trec-car-tools": {
