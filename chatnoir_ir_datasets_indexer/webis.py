@@ -13,7 +13,9 @@ def webis_uuid(corpus_prefix: str, internal_id: str) -> str:
     :return: Webis UUID as truncated Base64 string
     """
     uuid_input = ":".join((corpus_prefix, internal_id))
-    return urlsafe_b64encode(uuid5(NAMESPACE_URL, uuid_input).bytes)[:-2].decode()
+    uuid = uuid5(NAMESPACE_URL, uuid_input)
+    # Convert hex encoding to URL-safe base64 and truncate '==' padding
+    return urlsafe_b64encode(uuid.bytes)[:-2].decode()
 
 
 def webis_index_uuid(
@@ -55,4 +57,6 @@ def webis_index_uuid(
         clock_seq_low,
         node,
     )
-    return urlsafe_b64encode(UUID(fields=fields).bytes)[:-2].decode()
+    uuid = UUID(fields=fields)
+    # Convert hex encoding to URL-safe base64 and truncate '==' padding
+    return urlsafe_b64encode(uuid.bytes)[:-2].decode()
