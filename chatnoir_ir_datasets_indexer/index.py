@@ -1,6 +1,10 @@
+from abc import abstractmethod, ABC
+from datetime import datetime
+from logging import getLogger
 from os import environ
 from pathlib import Path
-from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping
+from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
+    Generic, TypedDict, Union, Any, Sequence
 from urllib.parse import urlparse
 
 from elasticsearch import Elasticsearch
@@ -8,7 +12,8 @@ from elasticsearch.helpers import streaming_bulk
 from ir_datasets import load
 from ir_datasets.datasets.base import Dataset
 from ir_datasets.formats import ClueWeb22BDoc
-from ir_datasets.formats.clueweb22 import ClueWeb22DocId, ClueWeb22Format
+from ir_datasets.formats.clueweb22 import ClueWeb22DocId, ClueWeb22Format, \
+    ClueWeb22ADoc
 from itertools import islice
 from resiliparse.extract.html2text import extract_plain_text
 from resiliparse.parse.html import HTMLTree
@@ -25,133 +30,243 @@ from chatnoir_ir_datasets_indexer.index_meta import SETTINGS_META, \
 from chatnoir_ir_datasets_indexer.text import collapse_whitespace
 from chatnoir_ir_datasets_indexer.webis import webis_uuid, webis_index_uuid
 
+_IR_DATASETS_HOME: Path
+if "IR_DATASETS_HOME" in environ:
+    _IR_DATASETS_HOME = Path(environ["IR_DATASETS_HOME"])
+else:
+    _IR_DATASETS_HOME = Path.home() / ".ir_datasets"
 
-class _SkipRecord(RuntimeError):
-    pass
+_LOGGER = getLogger("chatnoir-ir-datasets-indexer")
 
+_REPLACEMENT_CHAR = "\N{REPLACEMENT CHARACTER}"
 
-_Document = TypeVar("_Document", bound=NamedTuple)
-
-
-def _dataset_base_dir(dataset_id: str) -> Path:
-    if "IR_DATASETS_HOME" in environ:
-        ir_datasets_home = Path(environ["IR_DATASETS_HOME"])
-    else:
-        ir_datasets_home = Path.home() / ".ir_datasets"
-    if dataset_id.startswith("clueweb22"):
-        return ir_datasets_home / "clueweb22" / "corpus"
-    raise NotImplementedError(
-        f"Dataset base dir for ir_dataset {dataset_id} "
-        f"is not implemented yet."
-    )
-
-
-def _warc_file_info(
-        doc: _Document,
-        dataset_id: str,
-        dataset_base_dir: Path,
-) -> Tuple[Path, int]:
-    """
-    Extract file name, start offset and end offset
-    from ir_datasets document record.
-
-    :param doc: ir_datasets document record.
-    :param dataset_id: ir_datasets dataset ID.
-    """
-
-    if dataset_id.startswith("clueweb22/b"):
-        doc: ClueWeb22BDoc = doc
-        # Parse document ID into components.
-        doc_id = ClueWeb22DocId.from_string(doc.doc_id)
-
-        # Determine WARC base path.
-        format_type = ClueWeb22Format.HTML
-        format_path = dataset_base_dir / format_type.value.id
-        # Determine WARC file path.
-        doc_path_name = f"{doc_id.path}{format_type.value.extension}"
-        doc_path = format_path / doc_path_name
-        # Determine WARC offset path.
-        offsets_path_name = f"{doc_id.path}" \
-                            f"{format_type.value.offset_extension}"
-        offsets_path = format_path / offsets_path_name
-        # Read WARC offsets.
-        with offsets_path.open("rt", encoding="utf8") as offsets_file:
-            offset_line = next(
-                islice(offsets_file, doc_id.doc, doc_id.doc + 1)
-            )
-            # Determine document WARC record offsets.
-            offset = int(offset_line)
-        return doc_path, offset
-    raise NotImplementedError(
-        f"Metadata extraction for ir_dataset {dataset_id} "
-        f"is not implemented yet."
-    )
+_LANGUAGE_FIELDS = {
+    "title",
+    "meta_keywords",
+    "meta_desc",
+    "body",
+    "full_body",
+    "headings",
+}
 
 
-def _meta_record(
-        webis_id: str,
-        doc: _Document,
-        dataset_id: str,
-        file_name: str,
-        start_offset: int,
-) -> Mapping[str, str]:
-    """
-    Extract metadata from ir_datasets document record.
+class MetaRecord(TypedDict):
+    uuid: str
+    source_file: str
+    source_offset: int
+    warc_type: str
+    warc_target_uri: str
+    warc_date: datetime
+    warc_record_id: str
+    warc_trec_id: str
+    warc_payload_digest: str
+    content_type: str
+    content_length: int
+    content_encoding: str
 
-    :param webis_id: Webis document UUID
-    :param doc: ir_datasets document record.
-    :param dataset_id: ir_datasets dataset ID.
-    :param file_name: WARC file name.
-    :param start_offset: WARC file start offset.
-    """
 
-    if dataset_id.startswith("clueweb22/b"):
-        from ir_datasets.formats.clueweb22 import ClueWeb22BDoc
-        doc: ClueWeb22BDoc = doc
-        return {
-            "uuid": webis_id,
-            "source_file": file_name,
-            "source_offset": start_offset,
-            "warc_type": "response",
-            "warc_target_uri": doc.url,
-            "warc_target_uri_hash": doc.url_hash,
-            "warc_date": doc.date.isoformat(timespec="seconds"),
-            "warc_record_id": doc.record_id,
-            "warc_trec_id": doc.doc_id,
-            "warc_payload_digest": doc.payload_digest,
-            "content_type": "application/http;msgtype=response",
-            "content_length": len(doc.html),
-            "http_content_type": "text/html",
-            "http_content_length": len(doc.html),
-            "content_encoding": "utf8",
-        }
-    else:
-        raise NotImplementedError(
-            f"Metadata extraction for ir_dataset {dataset_id} "
-            f"is not implemented yet."
+class HttpMetaRecord(MetaRecord):
+    http_content_type: str
+    http_content_length: int
+
+
+class TextMetaRecord(MetaRecord):
+    text_source_file: str
+    text_source_offset: int
+    text_content_type: str
+    text_content_encoding: str
+
+
+class JsonLinesTextMetaRecord(TextMetaRecord):
+    text_content_field: str
+
+
+class DataRecord(TypedDict):
+    uuid: str
+    warc_record_id: str
+    warc_trec_id: str
+    warc_target_uri: str
+    warc_target_hostname: str
+    warc_target_path: str
+    warc_target_query_string: str
+    date: datetime
+    lang: str
+    content_type: str
+    body_length: int
+    title: str
+    meta_keywords: Sequence[str]
+    meta_desc: str
+    body: str
+    full_body: str
+    headings: Sequence[str]
+
+
+_DocumentType = TypeVar("_DocumentType", bound=NamedTuple)
+_MetaRecordType = TypeVar("_MetaRecordType", bound=MetaRecord)
+_DataRecordType = TypeVar("_DataRecordType", bound=DataRecord, )
+
+
+class DatasetMapping(
+    Generic[_DocumentType, _MetaRecordType, _DataRecordType], ABC
+):
+    @property
+    @abstractmethod
+    def base_dir(self) -> Path:
+        pass
+
+    @property
+    @abstractmethod
+    def corpus_prefix(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def num_shards(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def num_replicas(self) -> int:
+        pass
+
+    def webis_id(self, doc: _DocumentType) -> str:
+        return webis_uuid(self.corpus_prefix, doc.doc_id)
+
+    def webis_index_id(self, doc: _DocumentType, s3_bucket: str) -> str:
+        file = self.warc_file(doc, s3_bucket)
+        offset = self.warc_offset(doc)
+        time = self.record_time(doc)
+        webis_id = self.webis_id(doc)
+        return webis_index_uuid(
+            int(time.timestamp() * 1000),
+            offset,
+            file,
+            webis_id,
         )
 
+    @abstractmethod
+    def record_time(self, doc: _DocumentType) -> datetime:
+        pass
 
-def _data_record(
-        webis_id: str,
-        doc: _Document,
-        dataset_id: str,
-) -> Mapping[str, str]:
-    """
-    Parse WARC record payload into an index document.
+    @abstractmethod
+    def warc_path(self, doc: _DocumentType) -> Path:
+        """Determine WARC file path."""
+        pass
 
-    :param webis_id: Webis document UUID
-    :param doc: ir_datasets document
-    :param dataset_id: ir_datasets dataset ID.
-    :return: index document dict
-    """
-    if dataset_id.startswith("clueweb22/b"):
-        from ir_datasets.formats.clueweb22 import ClueWeb22BDoc
-        doc: ClueWeb22BDoc = doc
+    def warc_file(self, doc: _DocumentType, s3_bucket: str) -> str:
+        relative_path = self.warc_path(doc).relative_to(self.base_dir)
+        return f"s3://{s3_bucket}/{relative_path}"
 
+    @abstractmethod
+    def warc_offset(self, doc: _DocumentType) -> int:
+        pass
+
+    @abstractmethod
+    def meta_record(
+            self,
+            doc: _DocumentType,
+            s3_bucket: str,
+    ) -> Optional[_MetaRecordType]:
+        pass
+
+    @abstractmethod
+    def data_record(self, doc: _DocumentType) -> Optional[_DataRecordType]:
+        pass
+
+
+_ClueWeb22Doc = Union[ClueWeb22ADoc, ClueWeb22BDoc]
+
+
+class _ClueWeb22MetaRecord(MetaRecord, JsonLinesTextMetaRecord):
+    warc_target_uri_hash: str
+
+
+class _ClueWeb22DataRecord(DataRecord):
+    warc_target_uri_hash: str
+
+
+class ClueWeb22Mapping(
+    DatasetMapping[_ClueWeb22Doc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
+):
+    num_shards = 20
+    num_replicas = 2
+    base_dir = _IR_DATASETS_HOME / "clueweb22" / "corpus"
+    corpus_prefix = "clueweb22"
+
+    def record_time(self, doc: _ClueWeb22Doc) -> datetime:
+        return doc.date
+
+    @staticmethod
+    def _doc_id(doc: _ClueWeb22Doc) -> ClueWeb22DocId:
+        """Parse document ID into components."""
+        return ClueWeb22DocId.from_string(doc.doc_id)
+
+    def _path(self, doc: _ClueWeb22Doc, format_type: ClueWeb22Format) -> Path:
+        name = f"{self._doc_id(doc).path}{format_type.extension}"
+        return self.base_dir / format_type.id / name
+
+    def _offset(self, doc: _ClueWeb22Doc, format_type: ClueWeb22Format) -> int:
+        doc_id = self._doc_id(doc)
+        # Determine WARC offset path.
+        offsets_name = f"{doc_id.path}{format_type.offset_extension}"
+        offsets_path = self.base_dir / format_type.id / offsets_name
+        # Read WARC offsets.
+        with offsets_path.open("rt", encoding="utf8") as offsets_lines:
+            # Seek to the document offset.
+            offsets_lines = islice(offsets_lines, doc_id.doc, doc_id.doc + 1)
+            # Determine document WARC record offsets.
+            return int(next(offsets_lines))
+
+    def warc_path(self, doc: _ClueWeb22Doc) -> Path:
+        return self._path(doc, ClueWeb22Format.HTML)
+
+    def warc_offset(self, doc: _ClueWeb22Doc) -> int:
+        return self._offset(doc, ClueWeb22Format.HTML)
+
+    def text_path(self, doc: _ClueWeb22Doc) -> Path:
+        return self._path(doc, ClueWeb22Format.TXT)
+
+    def text_file(self, doc: _DocumentType, s3_bucket: str) -> str:
+        relative_path = self.text_path(doc).relative_to(self.base_dir)
+        return f"s3://{s3_bucket}/{relative_path}"
+
+    def text_offset(self, doc: _ClueWeb22Doc) -> int:
+        return self._offset(doc, ClueWeb22Format.TXT)
+
+    def meta_record(
+            self,
+            doc: _ClueWeb22Doc,
+            s3_bucket: str,
+    ) -> Optional[_ClueWeb22MetaRecord]:
+        return _ClueWeb22MetaRecord(
+            uuid=self.webis_id(doc),
+            source_file=self.warc_file(doc, s3_bucket),
+            source_offset=self.warc_offset(doc),
+            warc_type="resource",
+            warc_target_uri=doc.url,
+            warc_target_uri_hash=doc.url_hash,
+            warc_date=doc.date,
+            warc_record_id=str(doc.record_id),
+            warc_trec_id=doc.doc_id,
+            warc_payload_digest=doc.payload_digest,
+            content_type="text/html",
+            content_length=len(doc.html),
+            content_encoding="utf8",
+            text_source_file=self.text_file(doc, s3_bucket),
+            text_source_offset=self.text_offset(doc),
+            text_content_type="text/jsonl",
+            text_content_encoding="utf8",
+            text_content_field="Clean-Text",
+        )
+
+    def data_record(
+            self,
+            doc: _ClueWeb22Doc,
+    ) -> Optional[_ClueWeb22DataRecord]:
         html_tree = HTMLTree.parse_from_bytes(doc.html, "utf8")
         if not html_tree.body:
-            raise _SkipRecord("No body")
+            _LOGGER.info(f"Skipping document {doc.doc_id}: No body.")
+            return None
 
         content_full = extract_plain_text(
             html_tree,
@@ -159,23 +274,27 @@ def _data_record(
             preserve_formatting=False,
         )
         if len(content_full) <= 0:
-            raise _SkipRecord(
-                "Document empty after full content extraction"
+            _LOGGER.info(
+                f"Skipping document {doc.doc_id}: "
+                f"Document empty after full content extraction."
             )
+            return None
 
-        replacement_count = content_full.count("\ufffd")
+        replacement_count = content_full.count(_REPLACEMENT_CHAR)
         if replacement_count / len(content_full) > 0.1:
-            raise _SkipRecord(
-                "Document contains more than 10% Unicode "
-                "replacement characters."
+            _LOGGER.info(
+                f"Skipping document {doc.doc_id}: "
+                f"Document contains more than 10% Unicode "
+                f"replacement characters."
             )
         if replacement_count > 0:
-            content_full = content_full.replace("\ufffd", " ")
+            content_full = content_full.replace(_REPLACEMENT_CHAR, " ")
             content_full = collapse_whitespace(content_full)
 
         main_content = doc.text
         if len(main_content) < 200:
-            raise _SkipRecord(
+            _LOGGER.info(
+                f"Skipping document {doc.doc_id}: "
                 f"Main content too short ({len(main_content)} codepoints)."
             )
 
@@ -184,46 +303,50 @@ def _data_record(
         meta_keywords = extract_meta_keywords(html_tree)
         meta_description = extract_meta_description(html_tree)
 
-        return {
-            "uuid": webis_id,
-            "warc_record_id": doc.record_id,
-            "warc_trec_id": doc.doc_id,
-            "warc_target_uri": doc.url,
-            "warc_target_hostname": parse_url.hostname,
-            "warc_target_path": parse_url.path,
-            "warc_target_query_string": parse_url.query,
-            "warc_target_uri_hash": doc.url_hash,
-            "date": doc.date.isoformat(),
-            "lang": doc.language,
-            "content_type": "text/html",
-            "body_length": len(doc.html),
-            f"title_lang_{doc.language}": title,
-            f"meta_keywords_{doc.language}": meta_keywords,
-            f"meta_desc_lang_{doc.language}": meta_description,
-            f"body_lang_{doc.language}": main_content,
-            f"full_body_lang_{doc.language}": content_full,
-            f"headings_lang_{doc.language}":
-                extract_headings(html_tree, 3),
-        }
-    else:
-        raise NotImplementedError(
-            f"Metadata extraction for ir_dataset {dataset_id} "
-            f"is not implemented yet."
+        return _ClueWeb22DataRecord(
+            uuid=self.webis_id(doc),
+            warc_record_id=str(doc.record_id),
+            warc_trec_id=doc.doc_id,
+            warc_target_uri=doc.url,
+            warc_target_hostname=parse_url.hostname,
+            warc_target_path=parse_url.path,
+            warc_target_query_string=parse_url.query,
+            warc_target_uri_hash=doc.url_hash,
+            date=doc.date,
+            lang=doc.language,
+            content_type="text/html",
+            body_length=len(doc.html),
+            title=title,
+            meta_keywords=meta_keywords,
+            meta_desc=meta_description,
+            body=main_content,
+            full_body=content_full,
+            headings=extract_headings(html_tree, 3),
         )
 
 
-def _docs_iter(
+def _dataset_mapping(dataset_id: str) -> DatasetMapping:
+    if dataset_id.startswith("clueweb22/a"):
+        return ClueWeb22Mapping()
+    if dataset_id.startswith("clueweb22/b"):
+        return ClueWeb22Mapping()
+    raise NotImplementedError(
+        f"Dataset mapping for ir_datasets {dataset_id} is not implemented yet."
+    )
+
+
+def _iter_docs(
         start: Optional[int],
         end: Optional[int],
         dataset_id: str,
-) -> Tuple[Iterator[_Document], int, int]:
+) -> Tuple[Iterator[_DocumentType], int, int]:
     dataset: Dataset = load(dataset_id)
     if not dataset.has_docs():
         raise ValueError(f"Dataset {dataset_id} has no documents.")
     docs_iter = dataset.docs_iter()
     if start is not None or end is not None:
         docs_iter = docs_iter[start:end]
-    docs_iter: Iterator[_Document]
+    docs_iter: Iterator[_DocumentType]
 
     total = dataset.docs_count()
     if start is None:
@@ -247,55 +370,59 @@ def _docs_iter(
     return docs_iter, initial, total
 
 
-def _doc_id_prefix(dataset_id: str) -> str:
-    if dataset_id.startswith("clueweb22"):
-        return "clueweb22"
-    raise NotImplementedError(
-        f"Document ID prefix for ir_dataset {dataset_id} "
-        f"is not implemented yet."
-    )
+def _convert_field(value: Any) -> Union[str, Sequence[str]]:
+    if isinstance(value, str):
+        return value
+    if isinstance(value, Sequence):
+        return [_convert_field(item) for item in value]
+    if isinstance(value, datetime):
+        return value.isoformat(timespec="seconds")
+    return str(value)
+
+
+def _convert_record(
+        record: Mapping[str, Optional[Any]]
+) -> Mapping[str, Union[str, Sequence[str]]]:
+    record = dict(record)
+    if "lang" in record:
+        language = record["lang"]
+        for language_field in _LANGUAGE_FIELDS:
+            field_name = f"{language_field}_lang_{language}"
+            record[field_name] = record.pop(language_field)
+    return {
+        key: _convert_field(value)
+        for key, value in record.items()
+        if value is not None
+    }
 
 
 def _iter_actions(
         es_index_meta: str,
         es_index_data: str,
         s3_bucket: Optional[str],
-        dataset_id: str,
-        docs_iter: Iterator[_Document],
-        verbose: bool,
+        dataset_mapping: DatasetMapping[
+            _DocumentType, _MetaRecordType, _DataRecordType
+        ],
+        docs: Iterator[_DocumentType],
 ) -> Iterator[Mapping[str, str]]:
-    dataset_base_dir = _dataset_base_dir(dataset_id)
-    doc_id_prefix = _doc_id_prefix(dataset_id)
-    for doc in docs_iter:
-        path, offset = _warc_file_info(
-            doc,
-            dataset_id,
-            dataset_base_dir,
-        )
-        file_name: str = str(path.relative_to(dataset_base_dir))
-        if s3_bucket is not None:
-            file_name = f"s3://{s3_bucket}/{file_name}"
-
-        webis_id = webis_uuid(doc_id_prefix, doc.doc_id)
-        record_time = int(doc.date.timestamp() * 1000)
-        webis_index_id = webis_index_uuid(
-            record_time,
-            offset,
-            file_name,
-            webis_id,
-        )
-
-        try:
-            meta = _meta_record(webis_id, doc, dataset_id, file_name, offset)
-            data = _data_record(webis_id, doc, dataset_id)
-            meta_action = index_action(webis_index_id, es_index_meta, meta)
-            data_action = index_action(webis_index_id, es_index_data, data)
-            yield meta_action
-            yield data_action
-        except _SkipRecord as e:
-            if verbose:
-                print(f"Skipping document {doc.doc_id}: {e}")
+    for doc in docs:
+        meta = dataset_mapping.meta_record(doc, s3_bucket)
+        if meta is None:
             continue
+        meta = _convert_record(meta)
+
+        data = dataset_mapping.data_record(doc)
+        if data is None:
+            continue
+        data = _convert_record(data)
+
+        webis_index_id = dataset_mapping.webis_index_id(doc, s3_bucket)
+
+        meta_action = index_action(webis_index_id, es_index_meta, meta)
+        data_action = index_action(webis_index_id, es_index_data, data)
+
+        yield meta_action
+        yield data_action
 
 
 def _exists_index(es: Elasticsearch, es_index: str) -> bool:
@@ -303,21 +430,12 @@ def _exists_index(es: Elasticsearch, es_index: str) -> bool:
     return response.meta.status == 200
 
 
-def _num_shards_replicas(dataset_id: str) -> Tuple[int, int]:
-    if dataset_id.startswith("clueweb22"):
-        return 20, 2
-    raise NotImplementedError(
-        f"Number of shards and replicas for ir_dataset {dataset_id} "
-        f"is not implemented yet."
-    )
-
-
 def _create_data_index(
         es: Elasticsearch,
         es_index: str,
-        dataset_id: str,
+        num_shards: int,
+        num_replicas: int,
 ) -> bool:
-    num_shards, num_replicas = _num_shards_replicas(dataset_id)
     response = es.indices.create(
         index=es_index,
         settings={
@@ -335,9 +453,9 @@ def _create_data_index(
 def _create_meta_index(
         es: Elasticsearch,
         es_index: str,
-        dataset_id: str,
+        num_shards: int,
+        num_replicas: int,
 ) -> bool:
-    num_shards, num_replicas = _num_shards_replicas(dataset_id)
     response = es.indices.create(
         index=es_index,
         settings={
@@ -362,27 +480,33 @@ def index(
         start: Optional[int],
         end: Optional[int],
         dataset_id: str,
-        verbose: bool,
 ) -> None:
+    dataset_mapping = _dataset_mapping(dataset_id)
+
+    # Set up Elasticsearch connection.
     client = Elasticsearch(
         hosts=[es_host],
         http_auth=(es_username, es_password),
     )
-    if not _exists_index(client, es_index_meta):
-        _create_meta_index(client, es_index_meta, dataset_id)
-    if not _exists_index(client, es_index_data):
-        _create_data_index(client, es_index_data, dataset_id)
 
-    docs_iter, initial, total = _docs_iter(start, end, dataset_id)
+    # Create indices if they don't exist yet.
+    num_shards = dataset_mapping.num_shards
+    num_replicas = dataset_mapping.num_replicas
+    if not _exists_index(client, es_index_meta):
+        _create_meta_index(client, es_index_meta, num_shards, num_replicas)
+    if not _exists_index(client, es_index_data):
+        _create_data_index(client, es_index_data, num_shards, num_replicas)
+
+    # Iterate over documents.
+    docs, initial, total = _iter_docs(start, end, dataset_id)
     total_actions = (total - initial) * 2
 
     actions = _iter_actions(
         es_index_meta,
         es_index_data,
         s3_bucket,
-        dataset_id,
-        docs_iter,
-        verbose=verbose
+        dataset_mapping,
+        docs,
     )
     actions = (dict(action) for action in actions)
 
