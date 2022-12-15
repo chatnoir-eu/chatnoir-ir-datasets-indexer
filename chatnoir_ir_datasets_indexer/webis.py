@@ -1,4 +1,4 @@
-from base64 import b64encode
+from base64 import urlsafe_b64encode
 from hashlib import blake2b
 from uuid import uuid5, NAMESPACE_URL, UUID
 
@@ -13,7 +13,7 @@ def webis_uuid(corpus_prefix: str, internal_id: str) -> str:
     :return: Webis UUID as truncated Base64 string
     """
     uuid_input = ":".join((corpus_prefix, internal_id))
-    return b64encode(uuid5(NAMESPACE_URL, uuid_input).bytes)[:-2].decode()
+    return urlsafe_b64encode(uuid5(NAMESPACE_URL, uuid_input).bytes)[:-2].decode()
 
 
 def webis_index_uuid(
@@ -55,4 +55,4 @@ def webis_index_uuid(
         clock_seq_low,
         node,
     )
-    return b64encode(UUID(fields=fields).bytes)[:-2].decode()
+    return urlsafe_b64encode(UUID(fields=fields).bytes)[:-2].decode()
