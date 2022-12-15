@@ -1,6 +1,5 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
-from logging import getLogger
 from os import environ
 from pathlib import Path
 from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
@@ -19,6 +18,7 @@ from resiliparse.extract.html2text import extract_plain_text
 from resiliparse.parse.html import HTMLTree
 from tqdm.auto import tqdm
 
+from chatnoir_ir_datasets_indexer import LOGGER
 from chatnoir_ir_datasets_indexer.elasticsearch import index_action
 from chatnoir_ir_datasets_indexer.html import extract_title, \
     extract_meta_description, extract_meta_keywords, \
@@ -35,8 +35,6 @@ if "IR_DATASETS_HOME" in environ:
     _IR_DATASETS_HOME = Path(environ["IR_DATASETS_HOME"])
 else:
     _IR_DATASETS_HOME = Path.home() / ".ir_datasets"
-
-_LOGGER = getLogger("chatnoir-ir-datasets-indexer")
 
 _REPLACEMENT_CHAR = "\N{REPLACEMENT CHARACTER}"
 
@@ -74,6 +72,7 @@ class TextMetaRecord(MetaRecord):
     text_source_file: str
     text_source_offset: int
     text_content_type: str
+    text_content_length: int
     text_content_encoding: str
 
 
@@ -162,6 +161,10 @@ class DatasetMapping(
         pass
 
     @abstractmethod
+    def warc_content_length(self, doc: _DocumentType) -> int:
+        pass
+
+    @abstractmethod
     def meta_record(
             self,
             doc: _DocumentType,
@@ -207,21 +210,41 @@ class ClueWeb22Mapping(
 
     def _offset(self, doc: _ClueWeb22Doc, format_type: ClueWeb22Format) -> int:
         doc_id = self._doc_id(doc)
-        # Determine WARC offset path.
+        # Determine offset path.
         offsets_name = f"{doc_id.path}{format_type.offset_extension}"
         offsets_path = self.base_dir / format_type.id / offsets_name
-        # Read WARC offsets.
+        # Read offsets.
         with offsets_path.open("rt", encoding="utf8") as offsets_lines:
             # Seek to the document offset.
             offsets_lines = islice(offsets_lines, doc_id.doc, doc_id.doc + 1)
-            # Determine document WARC record offsets.
+            # Determine current document offset.
             return int(next(offsets_lines))
+
+    def _content_length(
+            self,
+            doc: _ClueWeb22Doc,
+            format_type: ClueWeb22Format,
+    ) -> int:
+        doc_id = self._doc_id(doc)
+        # Determine offset path.
+        offsets_name = f"{doc_id.path}{format_type.offset_extension}"
+        offsets_path = self.base_dir / format_type.id / offsets_name
+        # Read offsets.
+        with offsets_path.open("rt", encoding="utf8") as offsets_lines:
+            # Seek to the document offset.
+            offsets_lines = islice(offsets_lines, doc_id.doc, doc_id.doc + 2)
+            # Determine current and next document offset.
+            start, end = [int(offset) for offset in offsets_lines]
+            return end - start
 
     def warc_path(self, doc: _ClueWeb22Doc) -> Path:
         return self._path(doc, ClueWeb22Format.HTML)
 
     def warc_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.HTML)
+
+    def warc_content_length(self, doc: _ClueWeb22Doc) -> int:
+        return self._content_length(doc, ClueWeb22Format.HTML)
 
     def text_path(self, doc: _ClueWeb22Doc) -> Path:
         return self._path(doc, ClueWeb22Format.TXT)
@@ -232,6 +255,9 @@ class ClueWeb22Mapping(
 
     def text_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.TXT)
+
+    def text_content_length(self, doc: _ClueWeb22Doc) -> int:
+        return self._content_length(doc, ClueWeb22Format.TXT)
 
     def meta_record(
             self,
@@ -250,11 +276,12 @@ class ClueWeb22Mapping(
             warc_trec_id=doc.doc_id,
             warc_payload_digest=doc.payload_digest,
             content_type="text/html",
-            content_length=len(doc.html),
+            content_length=self.warc_content_length(doc),
             content_encoding="utf8",
             text_source_file=self.text_file(doc, s3_bucket),
             text_source_offset=self.text_offset(doc),
             text_content_type="text/jsonl",
+            text_content_length=self.text_content_length(doc),
             text_content_encoding="utf8",
             text_content_field="Clean-Text",
         )
@@ -265,7 +292,7 @@ class ClueWeb22Mapping(
     ) -> Optional[_ClueWeb22DataRecord]:
         html_tree = HTMLTree.parse_from_bytes(doc.html, "utf8")
         if not html_tree.body:
-            _LOGGER.info(f"Skipping document {doc.doc_id}: No body.")
+            LOGGER.info(f"Skipping document {doc.doc_id}: No body.")
             return None
 
         content_full = extract_plain_text(
@@ -274,7 +301,7 @@ class ClueWeb22Mapping(
             preserve_formatting=False,
         )
         if len(content_full) <= 0:
-            _LOGGER.info(
+            LOGGER.info(
                 f"Skipping document {doc.doc_id}: "
                 f"Document empty after full content extraction."
             )
@@ -282,21 +309,23 @@ class ClueWeb22Mapping(
 
         replacement_count = content_full.count(_REPLACEMENT_CHAR)
         if replacement_count / len(content_full) > 0.1:
-            _LOGGER.info(
+            LOGGER.info(
                 f"Skipping document {doc.doc_id}: "
                 f"Document contains more than 10% Unicode "
                 f"replacement characters."
             )
+            return None
         if replacement_count > 0:
             content_full = content_full.replace(_REPLACEMENT_CHAR, " ")
             content_full = collapse_whitespace(content_full)
 
         main_content = doc.text
         if len(main_content) < 200:
-            _LOGGER.info(
+            LOGGER.info(
                 f"Skipping document {doc.doc_id}: "
                 f"Main content too short ({len(main_content)} codepoints)."
             )
+            return None
 
         parse_url = urlparse(doc.url)
         title = extract_title(html_tree)

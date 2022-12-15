@@ -1,7 +1,9 @@
+from logging import INFO, basicConfig
 from typing import Optional
 
 from click import option, argument, STRING, INT, command, BOOL
 
+from chatnoir_ir_datasets_indexer import LOGGER
 from chatnoir_ir_datasets_indexer.index import index
 
 _DEFAULT_ES_HOST = "https://elasticsearch.srv.webis.de:9200"
@@ -58,6 +60,7 @@ _DEFAULT_ES_HOST = "https://elasticsearch.srv.webis.de:9200"
 @option(
     "--verbose", "-v",
     type=BOOL,
+    is_flag=True,
     required=False,
     default=False,
 )
@@ -78,6 +81,9 @@ def main(
         verbose: bool,
         dataset: str,
 ) -> None:
+    if verbose:
+        basicConfig()
+        LOGGER.setLevel(INFO)
     index(
         es_host=host,
         es_username=username,
@@ -88,7 +94,6 @@ def main(
         dataset_id=dataset,
         start=start,
         end=end,
-        verbose=verbose,
     )
 
 
