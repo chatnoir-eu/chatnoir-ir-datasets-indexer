@@ -51,29 +51,57 @@ _LANGUAGE_FIELDS = {
 class MetaRecord(TypedDict):
     uuid: str
     source_file: str
+    """
+    Source file URL in S3.
+    """
     source_offset: int
+    """
+    Source offset in the (compressed) source file to access the record.
+    """
     warc_type: str
     warc_target_uri: str
-    warc_warcinfo_id: str
+    warc_warcinfo_id: Optional[str]
     warc_date: datetime
     warc_record_id: str
     warc_trec_id: str
     warc_identified_payload_type: str
     warc_payload_digest: str
-    warc_block_digest: str
+    warc_block_digest: Optional[str]
     content_type: str
+    """
+    Record content type, e.g. ``application/http; msgtype=response``.
+    """
     content_length: int
+    """
+    Record content length, in bytes.
+    """
     http_content_length: int
+    """
+    Payload length, in bytes.
+    """
     http_content_type: str
+    """
+    Payload content type, e.g., ``text/html``.
+    """
     content_encoding: str
+    """
+    Payload encoding, e.g., ``utf8``.
+    """
 
 
 class BodyMetaRecord(MetaRecord):
     body_source_file: str
+    """
+    Body source file URL in S3.
+    """
     body_source_offset: int
+    """
+    Body source offset in the (compressed) source file to access the record.
+    """
     body_content_type: str
-    body_content_length: int
-    body_content_encoding: str
+    """
+    Body payload content type, e.g., ``application/x-ndjson``.
+    """
 
 
 class DataRecord(TypedDict):
@@ -174,10 +202,6 @@ class DatasetMapping(
 
 
 _ClueWeb22Doc = Union[ClueWeb22ADoc, ClueWeb22BDoc]
-
-
-class _ClueWeb22MetaRecord(MetaRecord, JsonLinesTextMetaRecord):
-    warc_target_uri_hash: str
 
 
 class _ClueWeb22DataRecord(DataRecord):
