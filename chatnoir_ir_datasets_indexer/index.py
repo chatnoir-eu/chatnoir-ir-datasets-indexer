@@ -54,30 +54,26 @@ class MetaRecord(TypedDict):
     source_offset: int
     warc_type: str
     warc_target_uri: str
+    warc_warcinfo_id: str
     warc_date: datetime
     warc_record_id: str
     warc_trec_id: str
+    warc_identified_payload_type: str
     warc_payload_digest: str
+    warc_block_digest: str
     content_type: str
     content_length: int
+    http_content_length: int
+    http_content_type: str
     content_encoding: str
 
 
-class HttpMetaRecord(MetaRecord):
-    http_content_type: str
-    http_content_length: int
-
-
-class TextMetaRecord(MetaRecord):
-    text_source_file: str
-    text_source_offset: int
-    text_content_type: str
-    text_content_length: int
-    text_content_encoding: str
-
-
-class JsonLinesTextMetaRecord(TextMetaRecord):
-    text_content_field: str
+class BodyMetaRecord(MetaRecord):
+    body_source_file: str
+    body_source_offset: int
+    body_content_type: str
+    body_content_length: int
+    body_content_encoding: str
 
 
 class DataRecord(TypedDict):
