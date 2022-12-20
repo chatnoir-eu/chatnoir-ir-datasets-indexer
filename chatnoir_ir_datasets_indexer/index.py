@@ -185,10 +185,6 @@ class DatasetMapping(
         pass
 
     @abstractmethod
-    def warc_content_length(self, doc: _DocumentType) -> int:
-        pass
-
-    @abstractmethod
     def meta_record(
             self,
             doc: _DocumentType,
@@ -209,7 +205,7 @@ class _ClueWeb22DataRecord(DataRecord):
 
 
 class ClueWeb22Mapping(
-    DatasetMapping[_ClueWeb22Doc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
+    DatasetMapping[_ClueWeb22Doc, BodyMetaRecord, _ClueWeb22DataRecord]
 ):
     num_shards = 20
     num_replicas = 2
@@ -240,70 +236,49 @@ class ClueWeb22Mapping(
             # Determine current document offset.
             return int(next(offsets_lines))
 
-    def _content_length(
-            self,
-            doc: _ClueWeb22Doc,
-            format_type: ClueWeb22Format,
-    ) -> int:
-        doc_id = self._doc_id(doc)
-        # Determine offset path.
-        offsets_name = f"{doc_id.path}{format_type.offset_extension}"
-        offsets_path = self.base_dir / format_type.id / offsets_name
-        # Read offsets.
-        with offsets_path.open("rt", encoding="utf8") as offsets_lines:
-            # Seek to the document offset.
-            offsets_lines = islice(offsets_lines, doc_id.doc, doc_id.doc + 2)
-            # Determine current and next document offset.
-            start, end = [int(offset) for offset in offsets_lines]
-            return end - start
-
     def warc_path(self, doc: _ClueWeb22Doc) -> Path:
         return self._path(doc, ClueWeb22Format.HTML)
 
     def warc_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.HTML)
 
-    def warc_content_length(self, doc: _ClueWeb22Doc) -> int:
-        return self._content_length(doc, ClueWeb22Format.HTML)
-
-    def text_path(self, doc: _ClueWeb22Doc) -> Path:
+    def body_path(self, doc: _ClueWeb22Doc) -> Path:
         return self._path(doc, ClueWeb22Format.TXT)
 
-    def text_file(self, doc: _DocumentType, s3_bucket: str) -> str:
-        relative_path = self.text_path(doc).relative_to(self.base_dir)
+    def body_file(self, doc: _DocumentType, s3_bucket: str) -> str:
+        relative_path = self.body_path(doc).relative_to(self.base_dir)
         return f"s3://{s3_bucket}/{relative_path}"
 
-    def text_offset(self, doc: _ClueWeb22Doc) -> int:
+    def body_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.TXT)
-
-    def text_content_length(self, doc: _ClueWeb22Doc) -> int:
-        return self._content_length(doc, ClueWeb22Format.TXT)
 
     def meta_record(
             self,
             doc: _ClueWeb22Doc,
             s3_bucket: str,
-    ) -> Optional[_ClueWeb22MetaRecord]:
-        return _ClueWeb22MetaRecord(
+    ) -> Optional[BodyMetaRecord]:
+        return BodyMetaRecord(
             uuid=self.webis_id(doc),
             source_file=self.warc_file(doc, s3_bucket),
             source_offset=self.warc_offset(doc),
             warc_type="resource",
             warc_target_uri=doc.url,
-            warc_target_uri_hash=doc.url_hash,
+            # warc_target_uri_hash=doc.url_hash,
+            warc_warcinfo_id=None,
             warc_date=doc.date,
             warc_record_id=str(doc.record_id),
             warc_trec_id=doc.doc_id,
+            warc_identified_payload_type="text/html",
             warc_payload_digest=doc.payload_digest,
+            warc_block_digest=None,
             content_type="text/html",
-            content_length=self.warc_content_length(doc),
+            content_length=len(doc.html),
+            http_content_type="text/html",
+            http_content_length=len(doc.html),
             content_encoding="utf8",
-            text_source_file=self.text_file(doc, s3_bucket),
-            text_source_offset=self.text_offset(doc),
-            text_content_type="text/jsonl",
-            text_content_length=self.text_content_length(doc),
-            text_content_encoding="utf8",
-            text_content_field="Clean-Text",
+            body_source_file=self.body_file(doc, s3_bucket),
+            body_source_offset=self.body_offset(doc),
+            body_content_type="application/x-ndjson+clueweb22",
         )
 
     def data_record(
