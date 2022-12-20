@@ -372,6 +372,11 @@ def _iter_docs(
         docs_iter = docs_iter[start:end]
     docs_iter: Iterator[_DocumentType]
 
+    start_text = f"start at {start}" if start is not None else None
+    end_text = f"end at {end}" if end is not None else None
+    limit_texts = [text for text in (start_text, end_text) if text is not None]
+    offset_text = f" ({', '.join(limit_texts)})" if limit_texts else ""
+
     total = dataset.docs_count()
     if start is None:
         start = 0
@@ -382,14 +387,12 @@ def _iter_docs(
     if end < 0:
         end = total + end
     total = end - start
-    initial = start
 
     # noinspection PyTypeChecker
     docs_iter = tqdm(
         docs_iter,
-        initial=initial,
-        total=initial + total,
-        desc=f"Iterate dataset {dataset_id}"
+        total=total,
+        desc=f"Iterate dataset {dataset_id}{offset_text}",
     )
     return docs_iter, total
 
