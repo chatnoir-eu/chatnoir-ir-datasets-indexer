@@ -363,7 +363,7 @@ def _iter_docs(
         start: Optional[int],
         end: Optional[int],
         dataset_id: str,
-) -> Tuple[Iterator[_DocumentType], int, int]:
+) -> Tuple[Iterator[_DocumentType], int]:
     dataset: Dataset = load(dataset_id)
     if not dataset.has_docs():
         raise ValueError(f"Dataset {dataset_id} has no documents.")
@@ -388,10 +388,10 @@ def _iter_docs(
     docs_iter = tqdm(
         docs_iter,
         initial=initial,
-        total=total,
+        total=initial + total,
         desc=f"Iterate dataset {dataset_id}"
     )
-    return docs_iter, initial, total
+    return docs_iter, total
 
 
 def _convert_field(value: Any) -> Union[str, Sequence[str]]:
@@ -522,8 +522,8 @@ def index(
         _create_data_index(client, es_index_data, num_shards, num_replicas)
 
     # Iterate over documents.
-    docs, initial, total = _iter_docs(start, end, dataset_id)
-    total_actions = (total - initial) * 2
+    docs, total = _iter_docs(start, end, dataset_id)
+    total_actions = total * 2
 
     actions = _iter_actions(
         es_index_meta,
