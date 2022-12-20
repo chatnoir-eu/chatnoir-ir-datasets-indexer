@@ -460,7 +460,7 @@
         },
         "ir-datasets": {
             "git": "https://github.com/heinrichreimer/ir_datasets.git",
-            "ref": "9e9819aea931e783ca5739b67c501c66862d07fe"
+            "ref": "27ba440b72b925b7d99cdb242eb5b774a7e3686b"
         },
         "lxml": {
             "hashes": [
