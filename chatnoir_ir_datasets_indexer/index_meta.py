@@ -12,7 +12,7 @@ MAPPINGS_META = {
         "content_length": {
             "type": "long"
         },
-        "http_content_type": {
+        "content_type": {
             "type": "keyword"
         },
         "warc_date": {
@@ -25,6 +25,9 @@ MAPPINGS_META = {
         "http_date": {
             "type": "date",
             "format": "date_time_no_millis"
+        },
+        "http_content_length": {
+            "type": "long"
         },
         "content_encoding": {
             "type": "keyword"
