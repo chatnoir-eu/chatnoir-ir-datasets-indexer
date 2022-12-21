@@ -689,7 +689,7 @@ def index(
     if not _exists_index(client, es_index_data):
         _create_data_index(
             client,
-            es_index_meta,
+            es_index_data,
             dataset_mapping.num_data_shards,
             dataset_mapping.num_data_replicas,
         )
