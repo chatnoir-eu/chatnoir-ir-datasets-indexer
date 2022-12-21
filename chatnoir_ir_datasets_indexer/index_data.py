@@ -11,24 +11,15 @@ MAPPINGS_DATA = {
         "uuid": {
             "type": "keyword"
         },
-        "warc_record_id": {
-            "type": "keyword"
-        },
-        "warc_trec_id": {
-            "type": "keyword"
-        },
-        "date": {
-            "type": "date",
-            "format": "date_optional_time"
-        },
         "lang": {
             "type": "keyword"
         },
         "body_length": {
             "type": "long"
         },
-        "warc_target_uri": {
-            "type": "keyword"
+        "warc_date": {
+            "type": "date",
+            "format": "date_optional_time"
         },
         "warc_target_hostname": {
             "type": "text",
@@ -55,8 +46,9 @@ MAPPINGS_DATA = {
             "similarity": "BM25",
             "analyzer": "query_analyzer"
         },
-        "content_type": {
-            "type": "keyword"
+        "http_date": {
+            "type": "date",
+            "format": "date_optional_time"
         },
         "page_rank": {
             "type": "float"
@@ -66,6 +58,24 @@ MAPPINGS_DATA = {
         }
     },
     "dynamic_templates": [
+        {
+            "warc_headers": {
+                "match": "warc_*",
+                "match_mapping_type": "string",
+                "mapping": {
+                    "type": "keyword"
+                }
+            },
+        },
+        {
+            "http_headers": {
+                "match": "http_*",
+                "match_mapping_type": "string",
+                "mapping": {
+                    "type": "keyword"
+                }
+            }
+        },
         {
             "lang_ar": {
                 "path_match": "*_lang_ar",
@@ -379,6 +389,7 @@ MAPPINGS_DATA = {
 
 SETTINGS_DATA = {
     "refresh_interval": "-1",
+    "routing.allocation.total_shards_per_node": "1",
     "analysis": {
         "filter": {
             "host_stop_filter": {

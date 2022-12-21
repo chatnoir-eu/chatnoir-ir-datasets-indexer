@@ -3,20 +3,17 @@ MAPPINGS_META = {
         "uuid": {
             "type": "keyword"
         },
-        "content_encoding": {
-            "type": "keyword"
-        },
-        "content_length": {
-            "type": "long"
-        },
-        "content_type": {
-            "type": "keyword"
-        },
         "source_file": {
             "type": "keyword"
         },
         "source_offset": {
             "type": "long"
+        },
+        "content_length": {
+            "type": "long"
+        },
+        "http_content_type": {
+            "type": "keyword"
         },
         "warc_date": {
             "type": "date",
@@ -24,7 +21,14 @@ MAPPINGS_META = {
         },
         "warc_ip_address": {
             "type": "ip"
-        }
+        },
+        "http_date": {
+            "type": "date",
+            "format": "date_time_no_millis"
+        },
+        "content_encoding": {
+            "type": "keyword"
+        },
     },
     "dynamic_templates": [
         {
@@ -50,5 +54,6 @@ MAPPINGS_META = {
 
 SETTINGS_META = {
     "codec": "best_compression",
-    "refresh_interval": "-1"
+    "refresh_interval": "-1",
+    "routing.allocation.total_shards_per_node": "1"
 }
