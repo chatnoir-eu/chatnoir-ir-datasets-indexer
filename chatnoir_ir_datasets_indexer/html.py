@@ -84,7 +84,7 @@ def extract_headings(
     from an HTML tree.
     :param max_level: Maximum heading level to extract.
     """
-    if html_tree.head is None:
+    if html_tree.body is None:
         return []
 
     selectors = [
@@ -93,7 +93,7 @@ def extract_headings(
     ]
     selector = ", ".join(selectors)
 
-    elements = html_tree.head.query_selector_all(selector)
+    elements = html_tree.body.query_selector_all(selector)
     headings = (
         collapse_whitespace(element.text)
         for element in elements
