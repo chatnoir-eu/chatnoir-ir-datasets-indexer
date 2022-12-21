@@ -90,7 +90,7 @@ class MetaRecord(TypedDict):
     WARC record TREC ID (``WARC-TREC-ID`` header), i.e., the official 
     TREC ID of the document stored within.
     """
-    warc_identified_payload_type: str
+    warc_identified_payload_type: Optional[str]
     """
     WARC record identified payload type (``WARC-Identified-Payload-Type`` 
     header).
@@ -101,7 +101,15 @@ class MetaRecord(TypedDict):
     """
     warc_block_digest: Optional[str]
     """
-    WARC record's block digest (``WARC-Block-Digest`` header).
+    WARC record block digest (``WARC-Block-Digest`` header).
+    """
+    warc_ip_address: Optional[str]
+    """
+    WARC record IP address (``WARC-IP-Address`` header).
+    """
+    warc_ip_address: Optional[str]
+    """
+    WARC record IP address (``WARC-IP-Address`` header).
     """
     content_type: str
     """
@@ -406,6 +414,7 @@ class ClueWeb22Mapping(
             warc_identified_payload_type="text/html",
             warc_payload_digest=doc.payload_digest,
             warc_block_digest=None,
+            warc_ip_address=None,
             content_type="text/html",
             content_length=len(doc.html),
             http_date=doc.date,
