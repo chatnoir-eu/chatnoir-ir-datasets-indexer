@@ -283,12 +283,22 @@ class DatasetMapping(
 
     @property
     @abstractmethod
-    def num_shards(self) -> int:
+    def num_data_shards(self) -> int:
         pass
 
     @property
     @abstractmethod
-    def num_replicas(self) -> int:
+    def num_data_replicas(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def num_meta_shards(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def num_meta_replicas(self) -> int:
         pass
 
     def webis_id(self, doc: _DocumentType) -> str:
@@ -350,8 +360,10 @@ class _ClueWeb22MetaRecord(PlaintextMetaRecord):
 class ClueWeb22Mapping(
     DatasetMapping[_ClueWeb22Doc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
 ):
-    num_shards = 40
-    num_replicas = 1
+    num_data_shards = 40
+    num_data_replicas = 1
+    num_meta_shards = 10
+    num_meta_replicas = 1
     base_dir = _IR_DATASETS_HOME / "clueweb22" / "corpus"
     corpus_prefix = "clueweb22"
 
@@ -667,12 +679,20 @@ def index(
     )
 
     # Create indices if they don't exist yet.
-    num_shards = dataset_mapping.num_shards
-    num_replicas = dataset_mapping.num_replicas
     if not _exists_index(client, es_index_meta):
-        _create_meta_index(client, es_index_meta, num_shards, num_replicas)
+        _create_meta_index(
+            client,
+            es_index_meta,
+            dataset_mapping.num_meta_shards,
+            dataset_mapping.num_meta_replicas,
+        )
     if not _exists_index(client, es_index_data):
-        _create_data_index(client, es_index_data, num_shards, num_replicas)
+        _create_data_index(
+            client,
+            es_index_meta,
+            dataset_mapping.num_data_shards,
+            dataset_mapping.num_data_replicas,
+        )
 
     # Iterate over documents.
     docs, total = _iter_docs(start, end, dataset_id)
