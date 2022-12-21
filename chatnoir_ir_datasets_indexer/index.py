@@ -208,7 +208,7 @@ class ClueWeb22Mapping(
     DatasetMapping[_ClueWeb22Doc, BodyMetaRecord, _ClueWeb22DataRecord]
 ):
     num_shards = 20
-    num_replicas = 0
+    num_replicas = 2
     base_dir = _IR_DATASETS_HOME / "clueweb22" / "corpus"
     corpus_prefix = "clueweb22"
 
