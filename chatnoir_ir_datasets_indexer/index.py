@@ -50,6 +50,9 @@ _LANGUAGE_FIELDS = {
 
 class MetaRecord(TypedDict):
     uuid: str
+    """
+    Webis internal UUID.
+    """
     source_file: str
     """
     Source file URL in S3.
@@ -59,46 +62,106 @@ class MetaRecord(TypedDict):
     Source offset in the (compressed) source file to access the record.
     """
     warc_type: str
+    """
+    WARC record type (``WARC-Type`` header), e.g., ``response`` 
+    or ``resource``.
+    """
     warc_target_uri: str
+    """
+    WARC record target URL (``WARC-Target-URI`` header), i.e., the original URL 
+    of the crawled document.
+    """
     warc_warcinfo_id: Optional[str]
+    """
+    WARC record ``WARC-Warcinfo-ID`` header.
+    """
     warc_date: datetime
+    """
+    WARC record date (``WARC-Date`` header) when the WARC record was created.
+    
+    Not to be confused with the actual document's date (``http_date``).
+    """
     warc_record_id: str
-    warc_trec_id: str
+    """
+    WARC record ID (``WARC-Record-ID`` header).
+    """
+    warc_trec_id: Optional[str]
+    """
+    WARC record TREC ID (``WARC-TREC-ID`` header), i.e., the official 
+    TREC ID of the document stored within.
+    """
     warc_identified_payload_type: str
-    warc_payload_digest: str
+    """
+    WARC record identified payload type (``WARC-Identified-Payload-Type`` 
+    header).
+    """
+    warc_payload_digest: Optional[str]
+    """
+    WARC record payload digest (``WARC-Payload-Digest`` header).
+    """
     warc_block_digest: Optional[str]
+    """
+    WARC record's block digest (``WARC-Block-Digest`` header).
+    """
     content_type: str
     """
-    Record content type, e.g. ``application/http; msgtype=response``.
+    WARCs record payload content type (``Content-Type`` header), 
+    e.g., ``application/http; msgtype=response`` for ``response`` records 
+    or ``text/http`` for ``resource`` records.
+    
+    Not to be confused with the actual document's 
+    content type (``http_content_type``).
     """
     content_length: int
     """
-    Record content length, in bytes.
+    WARC record payload content length (``Content-Length`` header) in bytes.
+    
+    Not to be confused with the actual document's 
+    content length (``http_content_length``).
+    """
+    http_date: datetime
+    """
+    Embedded document HTTP date to be returned by the ChatNoir cache (``Date`` 
+    header).
+    This often corresponds to the date when the document was crawled.
+    
+    Not to be confused with the WARC record's date (``warc_date``).
     """
     http_content_length: int
     """
-    Payload length, in bytes.
+    Embedded document HTTP content length to be returned by the ChatNoir
+    cache (HTTP ``Content-Length`` header).
+    
+    Not to be confused with the WARC record's 
+    payload content length (``content_length``).
     """
     http_content_type: str
     """
-    Payload content type, e.g., ``text/html``.
+    Embedded document HTTP content type, e.g., ``text/html``, to be returned 
+    by the ChatNoir cache (HTTP ``Content-Type`` header).
+    
+    Not to be confused with the WARC record's 
+    payload content type (``content_type``).
     """
     content_encoding: str
     """
-    Payload encoding, e.g., ``utf8``.
+    Embedded document HTTP content charset, e.g., ``utf8``, to be used 
+    for parsing HTML by the ChatNoir cache.
+    
+    Not to be confused with the HTTP ``Content-Encoding`` header.
     """
 
 
-class BodyMetaRecord(MetaRecord):
-    body_source_file: str
+class PlaintextMetaRecord(MetaRecord):
+    plaintext_source_file: str
     """
     Body source file URL in S3.
     """
-    body_source_offset: int
+    plaintext_source_offset: int
     """
     Body source offset in the (compressed) source file to access the record.
     """
-    body_content_type: str
+    plaintext_content_type: str
     """
     Body payload content type, e.g., ``application/x-ndjson``.
     """
@@ -106,27 +169,95 @@ class BodyMetaRecord(MetaRecord):
 
 class DataRecord(TypedDict):
     uuid: str
-    warc_record_id: str
-    warc_trec_id: str
-    warc_target_uri: str
-    warc_target_hostname: str
-    warc_target_path: str
-    warc_target_query_string: str
-    date: datetime
+    """
+    Webis internal UUID.
+    """
     lang: str
-    content_type: str
-    body_length: int
+    """
+    Document language code as specified in ISO 639-1.
+    Fall back to ISO 639‑2 or ISO 639‑3 if no two-letter code is available.
+    """
+    warc_date: datetime
+    """
+    WARC record date (``WARC-Date`` header) when the WARC record was created.
+    
+    Not to be confused with the actual document's date (``http_date``).
+    """
+    warc_record_id: str
+    """
+    WARC record ID (``WARC-Record-ID`` header).
+    """
+    warc_trec_id: Optional[str]
+    """
+    WARC record TREC ID (``WARC-TREC-ID`` header), i.e., the official 
+    TREC ID of the document stored within.
+    """
+    warc_target_uri: str
+    """
+    WARC record target URL (``WARC-Target-URI`` header), i.e., the original URL 
+    of the crawled document.
+    """
+    warc_target_hostname: str
+    """
+    WARC record target URL hostname (from ``warc_target_uri``).
+    """
+    warc_target_path: str
+    """
+    WARC record target URL path (from ``warc_target_uri``).
+    """
+    warc_target_query_string: str
+    """
+    WARC record target URL query_string (from ``warc_target_uri``).
+    """
+    http_date: datetime
+    """
+    Embedded document HTTP date to be returned by the ChatNoir cache (``Date`` 
+    header).
+    This often corresponds to the date when the document was crawled.
+    
+    Not to be confused with the WARC record's date (``warc_date``).
+    """
+    http_content_type: str
+    """
+    Embedded document HTTP content type, e.g., ``text/html``, to be returned 
+    by the ChatNoir cache (HTTP ``Content-Type`` header).
+    
+    Not to be confused with the WARC record's 
+    payload content type (``content_type``).
+    """
     title: str
+    """
+    Document title.
+    """
     meta_keywords: Sequence[str]
+    """
+    Document keywords from meta tags.
+    """
     meta_desc: str
+    """
+    Document description from meta tags.
+    """
     body: str
+    """
+    Document main content.
+    """
+    body_length: int
+    """
+    Length of the main content, i.e., ``len(body)``.
+    """
     full_body: str
+    """
+    Document full content.
+    """
     headings: Sequence[str]
+    """
+    List of document headings, e.g., ``h1``, ``h2``, ``h3``.
+    """
 
 
 _DocumentType = TypeVar("_DocumentType", bound=NamedTuple)
 _MetaRecordType = TypeVar("_MetaRecordType", bound=MetaRecord)
-_DataRecordType = TypeVar("_DataRecordType", bound=DataRecord, )
+_DataRecordType = TypeVar("_DataRecordType", bound=DataRecord)
 
 
 class DatasetMapping(
@@ -204,8 +335,12 @@ class _ClueWeb22DataRecord(DataRecord):
     warc_target_uri_hash: str
 
 
+class _ClueWeb22MetaRecord(PlaintextMetaRecord):
+    warc_target_uri_hash: str
+
+
 class ClueWeb22Mapping(
-    DatasetMapping[_ClueWeb22Doc, BodyMetaRecord, _ClueWeb22DataRecord]
+    DatasetMapping[_ClueWeb22Doc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
 ):
     num_shards = 20
     num_replicas = 2
@@ -242,28 +377,28 @@ class ClueWeb22Mapping(
     def warc_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.HTML)
 
-    def body_path(self, doc: _ClueWeb22Doc) -> Path:
+    def plaintext_path(self, doc: _ClueWeb22Doc) -> Path:
         return self._path(doc, ClueWeb22Format.TXT)
 
-    def body_file(self, doc: _DocumentType, s3_bucket: str) -> str:
-        relative_path = self.body_path(doc).relative_to(self.base_dir)
+    def plaintext_file(self, doc: _DocumentType, s3_bucket: str) -> str:
+        relative_path = self.plaintext_path(doc).relative_to(self.base_dir)
         return f"s3://{s3_bucket}/{relative_path}"
 
-    def body_offset(self, doc: _ClueWeb22Doc) -> int:
+    def plaintext_offset(self, doc: _ClueWeb22Doc) -> int:
         return self._offset(doc, ClueWeb22Format.TXT)
 
     def meta_record(
             self,
             doc: _ClueWeb22Doc,
             s3_bucket: str,
-    ) -> Optional[BodyMetaRecord]:
-        return BodyMetaRecord(
+    ) -> Optional[_ClueWeb22MetaRecord]:
+        return _ClueWeb22MetaRecord(
             uuid=self.webis_id(doc),
             source_file=self.warc_file(doc, s3_bucket),
             source_offset=self.warc_offset(doc),
             warc_type="resource",
             warc_target_uri=doc.url,
-            # warc_target_uri_hash=doc.url_hash,
+            warc_target_uri_hash=doc.url_hash,
             warc_warcinfo_id=None,
             warc_date=doc.date,
             warc_record_id=str(doc.record_id),
@@ -273,12 +408,13 @@ class ClueWeb22Mapping(
             warc_block_digest=None,
             content_type="text/html",
             content_length=len(doc.html),
+            http_date=doc.date,
             http_content_type="text/html",
             http_content_length=len(doc.html),
             content_encoding="utf8",
-            body_source_file=self.body_file(doc, s3_bucket),
-            body_source_offset=self.body_offset(doc),
-            body_content_type="application/x-ndjson+clueweb22",
+            plaintext_source_file=self.plaintext_file(doc, s3_bucket),
+            plaintext_source_offset=self.plaintext_offset(doc),
+            plaintext_content_type="application/x-ndjson+clueweb22",
         )
 
     def data_record(
@@ -327,8 +463,14 @@ class ClueWeb22Mapping(
         meta_keywords = extract_meta_keywords(html_tree)
         meta_description = extract_meta_description(html_tree)
 
+        language = doc.language
+        if "_" in language:
+            language = language.split("_")[0]
+
         return _ClueWeb22DataRecord(
             uuid=self.webis_id(doc),
+            lang=language,
+            warc_date=doc.date,
             warc_record_id=str(doc.record_id),
             warc_trec_id=doc.doc_id,
             warc_target_uri=doc.url,
@@ -336,14 +478,13 @@ class ClueWeb22Mapping(
             warc_target_path=parse_url.path,
             warc_target_query_string=parse_url.query,
             warc_target_uri_hash=doc.url_hash,
-            date=doc.date,
-            lang=doc.language,
-            content_type="text/html",
-            body_length=len(doc.html),
+            http_date=doc.date,
+            http_content_type="text/html",
             title=title,
             meta_keywords=meta_keywords,
             meta_desc=meta_description,
             body=main_content,
+            body_length=len(main_content),
             full_body=content_full,
             headings=extract_headings(html_tree, 3),
         )
