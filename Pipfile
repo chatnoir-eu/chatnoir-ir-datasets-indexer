@@ -9,6 +9,7 @@ elasticsearch = {extras = ["async"], version = "*"}
 ir-datasets = {ref = "clueweb22", git = "https://github.com/heinrichreimer/ir_datasets.git"}
 resiliparse = "*"
 tqdm = "*"
+jupyter = "*"
 
 [dev-packages]
 
