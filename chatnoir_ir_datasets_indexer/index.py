@@ -7,7 +7,7 @@ from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
 from urllib.parse import urlparse
 
 from elasticsearch import Elasticsearch
-from elasticsearch.helpers import streaming_bulk
+from elasticsearch.helpers import streaming_bulk, BulkIndexError
 from ir_datasets import load
 from ir_datasets.datasets.base import Dataset
 from ir_datasets.formats import ClueWeb22BDoc
@@ -707,23 +707,26 @@ def index(
     )
     actions = (dict(action) for action in actions)
 
-    results = streaming_bulk(
-        client,
-        actions,
-        chunk_size=100,
-        yield_ok=True,
-        max_retries=10,
-        initial_backoff=60,
-        max_backoff=3600,
-        timeout="5m",
-        request_timeout=300,
-    )
-    results = tqdm(
-        results,
-        desc=f"Index dataset {dataset_id}",
-        unit="action",
-        total=total_actions,
-    )
-    for ok, item in results:
-        if not ok:
-            raise Exception(f"Failed to index with error: {item}")
+    try:
+        results = streaming_bulk(
+            client,
+            actions,
+            chunk_size=100,
+            yield_ok=True,
+            max_retries=10,
+            initial_backoff=60,
+            max_backoff=3600,
+            timeout="5m",
+            request_timeout=300,
+        )
+        results = tqdm(
+            results,
+            desc=f"Index dataset {dataset_id}",
+            unit="action",
+            total=total_actions,
+        )
+        for ok, item in results:
+            if not ok:
+                raise Exception(f"Failed to index with error: {item}")
+    except BulkIndexError as e:
+        raise Exception(f"Failed to index with errors: {e.errors}")
