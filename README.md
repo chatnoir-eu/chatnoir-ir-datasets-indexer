@@ -12,7 +12,15 @@ Simple indexer to integrate selected datasets from [ir_datasets](https://ir-data
     pipenv install
     ```
 
-## Usage  
+## Usage without Pipenv
+
+I had problems with running it with PipEnv, hence, I used the one above.
+
+```shell
+./main.py
+```
+
+## Usage with Pipenv
 
 ```shell
 pipenv run python -m chatnoir_ir_datasets_indexer

@@ -6,7 +6,7 @@ name = "pypi"
 [packages]
 click = "*"
 elasticsearch = {extras = ["async"], version = "*"}
-ir-datasets = {ref = "clueweb22", git = "https://github.com/heinrichreimer/ir_datasets.git"}
+ir-datasets = {ref = "add-msmarco-v2.1-trec-rag", git = "https://github.com/MattiWe/ir_datasets.git"}
 resiliparse = "*"
 tqdm = "*"
 jupyter = "*"

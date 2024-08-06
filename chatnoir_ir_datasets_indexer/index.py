@@ -10,9 +10,7 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk, BulkIndexError
 from ir_datasets import load
 from ir_datasets.datasets.base import Dataset
-from ir_datasets.formats import ClueWeb22BDoc
-from ir_datasets.formats.clueweb22 import ClueWeb22DocId, ClueWeb22Format, \
-    ClueWeb22ADoc
+from ir_datasets.formats import GenericDoc
 from itertools import islice
 from resiliparse.extract.html2text import extract_plain_text
 from resiliparse.parse.html import HTMLTree
@@ -346,8 +344,6 @@ class DatasetMapping(
         pass
 
 
-_ClueWeb22Doc = Union[ClueWeb22ADoc, ClueWeb22BDoc]
-
 
 class _ClueWeb22DataRecord(DataRecord):
     warc_target_uri_hash: str
@@ -358,7 +354,7 @@ class _ClueWeb22MetaRecord(PlaintextMetaRecord):
 
 
 class ClueWeb22Mapping(
-    DatasetMapping[_ClueWeb22Doc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
+    DatasetMapping[GenericDoc, _ClueWeb22MetaRecord, _ClueWeb22DataRecord]
 ):
     num_data_shards = 40
     num_data_replicas = 1
@@ -367,19 +363,19 @@ class ClueWeb22Mapping(
     base_dir = _IR_DATASETS_HOME / "clueweb22" / "corpus"
     corpus_prefix = "clueweb22"
 
-    def record_time(self, doc: _ClueWeb22Doc) -> datetime:
+    def record_time(self, doc: GenericDoc) -> datetime:
         return doc.date
 
     @staticmethod
-    def _doc_id(doc: _ClueWeb22Doc) -> ClueWeb22DocId:
+    def _doc_id(doc: GenericDoc):
         """Parse document ID into components."""
         return ClueWeb22DocId.from_string(doc.doc_id)
 
-    def _path(self, doc: _ClueWeb22Doc, format_type: ClueWeb22Format) -> Path:
+    def _path(self, doc: GenericDoc, format_type) -> Path:
         name = f"{self._doc_id(doc).path}{format_type.extension}"
         return self.base_dir / format_type.id / name
 
-    def _offset(self, doc: _ClueWeb22Doc, format_type: ClueWeb22Format) -> int:
+    def _offset(self, doc: GenericDoc, format_type) -> int:
         doc_id = self._doc_id(doc)
         # Determine offset path.
         offsets_name = f"{doc_id.path}{format_type.offset_extension}"
@@ -391,25 +387,25 @@ class ClueWeb22Mapping(
             # Determine current document offset.
             return int(next(offsets_lines))
 
-    def warc_path(self, doc: _ClueWeb22Doc) -> Path:
+    def warc_path(self, doc) -> Path:
         return self._path(doc, ClueWeb22Format.HTML)
 
-    def warc_offset(self, doc: _ClueWeb22Doc) -> int:
+    def warc_offset(self, doc) -> int:
         return self._offset(doc, ClueWeb22Format.HTML)
 
-    def plaintext_path(self, doc: _ClueWeb22Doc) -> Path:
+    def plaintext_path(self, doc) -> Path:
         return self._path(doc, ClueWeb22Format.TXT)
 
     def plaintext_file(self, doc: _DocumentType, s3_bucket: str) -> str:
         relative_path = self.plaintext_path(doc).relative_to(self.base_dir)
         return f"s3://{s3_bucket}/{relative_path}"
 
-    def plaintext_offset(self, doc: _ClueWeb22Doc) -> int:
+    def plaintext_offset(self, doc) -> int:
         return self._offset(doc, ClueWeb22Format.TXT)
 
     def meta_record(
             self,
-            doc: _ClueWeb22Doc,
+            doc,
             s3_bucket: str,
     ) -> Optional[_ClueWeb22MetaRecord]:
         return _ClueWeb22MetaRecord(
@@ -440,7 +436,7 @@ class ClueWeb22Mapping(
 
     def data_record(
             self,
-            doc: _ClueWeb22Doc,
+            doc,
     ) -> Optional[_ClueWeb22DataRecord]:
         html_tree = HTMLTree.parse_from_bytes(doc.html, "utf8")
         if not html_tree.body:
@@ -510,12 +506,61 @@ class ClueWeb22Mapping(
             headings=extract_headings(html_tree, 3),
         )
 
+class MsMarcoV21SegmentedDocumentMapping(DatasetMapping):
+    num_data_shards = 40
+    num_data_replicas = 1
+    num_meta_shards = 10
+    num_meta_replicas = 1
+    corpus_prefix = 'msmarco-v2.1-document-segmented'
+    base_dir = Path('.')
+
+    def record_time(self, doc: _DocumentType) -> datetime:
+        return datetime.strptime('01/22', '%m/%y')
+
+    def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
+        return PlaintextMetaRecord(plaintext_source_file='', plaintext_source_offset=0, plaintext_content_type='application/json')
+
+    def data_record(self, doc: _DocumentType) -> Optional[_DataRecordType]:
+        parse_url = urlparse(doc.url)
+        main_content = doc.default_text()
+        return DataRecord(
+            uuid=self.webis_id(doc),
+            lang='en',
+            warc_date=None,
+            warc_record_id=None,
+            warc_trec_id=doc.doc_id,
+            warc_target_uri=doc.url,
+            warc_target_hostname=parse_url.hostname,
+            warc_target_path=parse_url.path,
+            warc_target_query_string=parse_url.query,
+            warc_target_uri_hash=None,
+            http_date=None,
+            http_content_type="text/html",
+            title=doc.title,
+            meta_keywords=None,
+            meta_desc=None,
+            body=main_content,
+            body_length=len(main_content),
+            full_body=main_content,
+            headings=None,
+        )
+
+    def warc_path(self, doc: _DocumentType) -> Path:
+        (string1, string2, string3, bundlenum, doc_position, position) = doc.doc_id.split("_")
+        assert string1 == "msmarco" and string2 == "v2.1" and string3 == "doc"
+        return Path(f'msmarco_v2.1_doc_segmented_{bundlenum}.json')
+
+    def warc_offset(self, doc: _DocumentType) -> int:
+        return int(doc.doc_id.split('_')[-1])
+
 
 def _dataset_mapping(dataset_id: str) -> DatasetMapping:
     if dataset_id.startswith("clueweb22/a"):
         return ClueWeb22Mapping()
     if dataset_id.startswith("clueweb22/b"):
         return ClueWeb22Mapping()
+    if dataset_id.startswith("msmarco-document-v2.1/segmented"):
+        return MsMarcoV21SegmentedDocumentMapping()
     raise NotImplementedError(
         f"Dataset mapping for ir_datasets {dataset_id} is not implemented yet."
     )

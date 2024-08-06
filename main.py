@@ -1,0 +1,1 @@
+chatnoir_ir_datasets_indexer/__main__.py
