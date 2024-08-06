@@ -2,7 +2,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
     Generic, TypedDict, Union, Any, Sequence
-from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _MetaRecordType, _DataRecordType, PlaintextMetaRecord, DataRecord
+from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _MetaRecordType, _DataRecordType, MetaRecord, DataRecord
 from urllib.parse import urlparse
 
 class MsMarcoV21SegmentedDocumentMapping(DatasetMapping):
@@ -17,10 +17,12 @@ class MsMarcoV21SegmentedDocumentMapping(DatasetMapping):
         return datetime.strptime('01/22', '%m/%y')
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        return PlaintextMetaRecord(
-            plaintext_source_file='s3://corpus-msmarco-document-v2.1-segmented/' + str(self.warc_path(doc)),
-            plaintext_source_offset=self.warc_offset(doc),
-            plaintext_content_type='application/json'
+        return MetaRecord(
+            source_file='s3://corpus-msmarco-document-v2.1-segmented/' + str(self.warc_path(doc)),
+            source_offset=self.warc_offset(doc),
+            content_type='application/json',
+            uuid=self.webis_id(doc),
+            warc_trec_id=doc.doc_id,
         )
 
     def data_record(self, doc: _DocumentType) -> Optional[_DataRecordType]:
