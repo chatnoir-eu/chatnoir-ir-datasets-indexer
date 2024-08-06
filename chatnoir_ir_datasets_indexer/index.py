@@ -4,7 +4,6 @@ from os import environ
 from pathlib import Path
 from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
     Generic, TypedDict, Union, Any, Sequence
-from urllib.parse import urlparse
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import streaming_bulk, BulkIndexError
