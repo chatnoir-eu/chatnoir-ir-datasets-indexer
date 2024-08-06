@@ -1,3 +1,9 @@
+from pathlib import Path
+from datetime import datetime
+from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
+    Generic, TypedDict, Union, Any, Sequence
+from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _MetaRecordType, _DataRecordType, PlaintextMetaRecord, DataRecord
+
 class MsMarcoV21SegmentedDocumentMapping(DatasetMapping):
     num_data_shards = 40
     num_data_replicas = 1

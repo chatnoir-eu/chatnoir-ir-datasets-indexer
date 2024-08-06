@@ -1,4 +1,10 @@
-class MsMarcoV21SegmentedDocumentMapping(DatasetMapping):
+from pathlib import Path
+from datetime import datetime
+from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
+    Generic, TypedDict, Union, Any, Sequence
+from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _MetaRecordType, _DataRecordType, PlaintextMetaRecord, DataRecord
+
+class VaswaniDocumentMapping(DatasetMapping):
     num_data_shards = 1
     num_data_replicas = 3
     num_meta_shards = 1
