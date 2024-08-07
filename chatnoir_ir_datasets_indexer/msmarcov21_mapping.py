@@ -51,7 +51,7 @@ class MsMarcoV21DocumentMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        (string1, string2, string3, bundlenum, doc_position, position) = doc.doc_id.split("_")
+        (string1, string2, string3, bundlenum, position) = doc.doc_id.split("_")
         assert string1 == "msmarco" and string2 == "v2.1" and string3 == "doc"
         return Path(f'msmarco_v2.1_doc_{bundlenum}.json')
 
