@@ -350,6 +350,9 @@ def _dataset_mapping(dataset_id: str) -> DatasetMapping:
     if dataset_id.startswith("msmarco-document-v2.1/segmented"):
         from chatnoir_ir_datasets_indexer.msmarcov21_mapping import MsMarcoV21SegmentedDocumentMapping
         return MsMarcoV21SegmentedDocumentMapping()
+    if dataset_id.startswith("msmarco-document-v2.1"):
+        from chatnoir_ir_datasets_indexer.msmarcov21_mapping import MsMarcoV21DocumentMapping
+        return MsMarcoV21DocumentMapping()
     if dataset_id == "vaswani":
         from chatnoir_ir_datasets_indexer.vaswani_mapping import VaswaniDocumentMapping
         return VaswaniDocumentMapping()
