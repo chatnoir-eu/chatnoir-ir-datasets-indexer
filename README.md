@@ -25,3 +25,21 @@ I had problems with running it with PipEnv, hence, I used the one above.
 ```shell
 pipenv run python -m chatnoir_ir_datasets_indexer
 ```
+
+## Datasets in progress
+
+### TREC TOT
+
+`md5sum ~/.ir_datasets/trec-tot/2024/corpus.jsonl` gives: `0c535ac8d5cee481add41543bc8cb854`.
+
+Upload data to s3:
+```
+s3cmd mb s3://corpus-trec-tot-2024
+s3cmd put corpus.jsonl s3://corpus-trec-tot-2024/corpus.jsonl
+```
+
+Create document offsets:
+```
+./chatnoir_ir_datasets_indexer/document_offsets.py ~/.ir_datasets/trec-tot/2024/corpus.jsonl trec-tot-offsets.json.gz
+```
+
