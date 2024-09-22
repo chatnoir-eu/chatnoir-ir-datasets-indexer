@@ -13,7 +13,7 @@ class TrecTot2024DocumentMapping(DatasetMapping):
     corpus_prefix = 'trec-tot-2024-document'
     base_dir = Path('.')
 
-    def __init__():
+    def __init__(self):
         self.inserted_document_ids = set()
         with gzip.open('trec-tot-offsets.json.gz', 'rt') as f:
             self.warc_offset = json.load(f)
