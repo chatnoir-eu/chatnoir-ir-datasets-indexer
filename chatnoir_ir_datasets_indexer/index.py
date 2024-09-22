@@ -356,6 +356,9 @@ def _dataset_mapping(dataset_id: str) -> DatasetMapping:
     if dataset_id == "vaswani":
         from chatnoir_ir_datasets_indexer.vaswani_mapping import VaswaniDocumentMapping
         return VaswaniDocumentMapping()
+    if dataset_id == 'trec-tot/2024':
+        from chatnoir_ir_datasets_indexer.trec_tot_2024_mapping import TrecTot2024DocumentMapping
+        return TrecTot2024DocumentMapping()
     raise NotImplementedError(
         f"Dataset mapping for ir_datasets {dataset_id} is not implemented yet."
     )

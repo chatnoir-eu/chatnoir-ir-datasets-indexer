@@ -40,6 +40,6 @@ s3cmd put corpus.jsonl s3://corpus-trec-tot-2024/corpus.jsonl
 
 Create document offsets:
 ```
-./chatnoir_ir_datasets_indexer/document_offsets.py ~/.ir_datasets/trec-tot/2024/corpus.jsonl trec-tot-offsets.json.gz
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno doc_id ~/.ir_datasets/trec-tot/2024/corpus.jsonl trec-tot-offsets.json.gz
 ```
 
