@@ -59,3 +59,9 @@ class TrecTot2024DocumentMapping(DatasetMapping):
             headings=None,
         )
 
+    def warc_path(self, doc: _DocumentType) -> Path:
+        raise ValueError('custom...')
+
+    def warc_offset(self, doc: _DocumentType) -> int:
+        raise ValueError('custom...')
+
