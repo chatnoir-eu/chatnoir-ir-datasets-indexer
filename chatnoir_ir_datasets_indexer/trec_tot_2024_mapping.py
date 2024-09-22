@@ -44,7 +44,7 @@ class TrecTot2024DocumentMapping(DatasetMapping):
             warc_record_id=None,
             warc_trec_id=doc.doc_id,
             warc_target_uri='https://www.wikidata.org/wiki/' + doc.wikidata_id,
-            warc_target_hostname='wikipedia,
+            warc_target_hostname='wikipedia.org',
             warc_target_path=None,
             warc_target_query_string=parse_url.query,
             warc_target_uri_hash=None,
