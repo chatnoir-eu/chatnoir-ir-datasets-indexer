@@ -4,6 +4,7 @@ from typing import Iterator, Optional, Tuple, TypeVar, NamedTuple, Mapping, \
     Generic, TypedDict, Union, Any, Sequence
 from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _MetaRecordType, _DataRecordType, MetaRecord, DataRecord
 from urllib.parse import urlparse
+import gzip
 
 class TrecTot2024DocumentMapping(DatasetMapping):
     num_data_shards = 3
