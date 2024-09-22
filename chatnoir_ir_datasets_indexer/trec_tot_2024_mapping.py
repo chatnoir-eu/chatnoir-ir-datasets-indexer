@@ -18,17 +18,17 @@ class TrecTot2024DocumentMapping(DatasetMapping):
     def __init__(self):
         self.inserted_document_ids = set()
         with gzip.open('trec-tot-offsets.json.gz', 'rt') as f:
-            self.warc_offset = json.load(f)
+            self.warc_offsets = json.load(f)
 
     def record_time(self, doc: _DocumentType) -> datetime:
         return datetime.strptime('01/24', '%m/%y')
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        offset = self.warc_offset[doc]
+        offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
-            source_file='s3://corpus-trec-tot-2024/corpus.jsonl',
+            source_file='s3://corpus-trec-tot-2024/' + str(self.warc_path(doc)),
             source_offset=offset['start'],
-            content_length=offset['start'] - offset['start'],
+            content_length=offset['end'] - offset['start'],
             content_type='application/json',
             uuid=self.webis_id(doc),
             warc_trec_id=doc.doc_id,
@@ -48,7 +48,7 @@ class TrecTot2024DocumentMapping(DatasetMapping):
             warc_target_uri='https://www.wikidata.org/wiki/' + doc.wikidata_id,
             warc_target_hostname='wikipedia.org',
             warc_target_path=None,
-            warc_target_query_string=parse_url.query,
+            warc_target_query_string=None,
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
@@ -62,8 +62,8 @@ class TrecTot2024DocumentMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        raise ValueError('custom...')
+        return Path('corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
-        raise ValueError('custom...')
+        return self.warc_offsets[doc.doc_id]['start']
 
