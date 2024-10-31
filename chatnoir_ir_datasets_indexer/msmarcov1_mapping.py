@@ -101,7 +101,7 @@ class MsMarcoV1PassageMapping(DatasetMapping):
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
-            title=doc.title,
+            title='Passage ' + str(doc.doc_id),
             meta_keywords=None,
             meta_desc=None,
             body=main_content,
