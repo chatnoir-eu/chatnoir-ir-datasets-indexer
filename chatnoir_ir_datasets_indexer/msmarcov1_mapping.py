@@ -23,7 +23,7 @@ class MsMarcoV1DocumentMapping(DatasetMapping):
         return datetime.strptime('01/18', '%m/%y')
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        offset = self.warc_offset[doc]
+        offset = self.warc_offset[doc.doc_id]
         return MetaRecord(
             source_file='s3://corpus-msmarco-document-v1/corpus.jsonl',
             source_offset=offset['start'],
@@ -80,7 +80,7 @@ class MsMarcoV1PassageMapping(DatasetMapping):
             self.warc_offset = json.load(f)
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        offset = self.warc_offset[doc]
+        offset = self.warc_offset[doc.doc_id]
         return MetaRecord(
             source_file='s3://corpus-msmarco-passage-v1/corpus.jsonl',
             source_offset=offset['start'],
