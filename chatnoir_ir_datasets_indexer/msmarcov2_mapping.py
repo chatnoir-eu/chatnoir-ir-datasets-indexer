@@ -12,7 +12,7 @@ class MsMarcoV2DocumentMapping(DatasetMapping):
     num_data_replicas = 1
     num_meta_shards = 10
     num_meta_replicas = 1
-    corpus_prefix = 'msmarco-v1-document'
+    corpus_prefix = 'msmarco-v2-document'
     base_dir = Path('.')
 
     def __init__(self):
@@ -25,7 +25,7 @@ class MsMarcoV2DocumentMapping(DatasetMapping):
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
         offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
-            source_file='s3://corpus-msmarco-document-v1/corpus.jsonl',
+            source_file='s3://corpus-msmarco-document-v2/corpus.jsonl',
             source_offset=offset['start'],
             content_length=offset['start'] - offset['start'],
             content_type='application/json',
@@ -69,7 +69,7 @@ class MsMarcoV2PassageMapping(DatasetMapping):
     num_data_replicas = 1
     num_meta_shards = 10
     num_meta_replicas = 1
-    corpus_prefix = 'msmarco-1-passage'
+    corpus_prefix = 'msmarco-v2-passage'
     base_dir = Path('.')
 
     def record_time(self, doc: _DocumentType) -> datetime:
@@ -82,7 +82,7 @@ class MsMarcoV2PassageMapping(DatasetMapping):
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
         offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
-            source_file='s3://corpus-msmarco-passage-v1/corpus.jsonl',
+            source_file='s3://corpus-msmarco-passage-v2/corpus.jsonl',
             source_offset=offset['start'],
             content_length=offset['start'] - offset['start'],
             content_type='application/json',
