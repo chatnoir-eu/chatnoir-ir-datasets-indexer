@@ -6,6 +6,7 @@ from chatnoir_ir_datasets_indexer.index import DatasetMapping, _DocumentType, _M
 from urllib.parse import urlparse
 import gzip
 import json
+from tqdm import tqdm
 
 class MsMarcoV2DocumentMapping(DatasetMapping):
     num_data_shards = 40
@@ -76,6 +77,12 @@ class MsMarcoV2PassageMapping(DatasetMapping):
         return datetime.strptime('01/21', '%m/%y')
 
     def __init__(self):
+        self.metadata_for_docs = {}
+        with open('/mnt/ceph/tira/data/publicly-shared-datasets/ms-marco-document-v2/documents.jsonl', 'r') as f:
+            for l in tqdm(f, 'load metadata'):
+                l = json.loads(l)['original_document']
+                self.metadata_for_docs[l['doc_id']] = {'title': l['title'], 'url': l['url']}
+
         with gzip.open('msmarco-v2-passage-offsets.json.gz', 'rt') as f:
             self.warc_offsets = json.load(f)
 
@@ -92,21 +99,23 @@ class MsMarcoV2PassageMapping(DatasetMapping):
 
     def data_record(self, doc: _DocumentType) -> Optional[_DataRecordType]:
         main_content = doc.default_text()
-        parse_url = urlparse(doc.url)
+        metadata_for_doc = self.metadata_for_docs[doc.msmarco_document_id]
+        
+        parse_url = urlparse(metadata_for_doc['url'])
         return DataRecord(
             uuid=self.webis_id(doc),
             lang='en',
             warc_date=None,
             warc_record_id=None,
             warc_trec_id=doc.doc_id,
-            warc_target_uri=doc.url,
+            warc_target_uri=metadata_for_doc['url'],
             warc_target_hostname=parse_url.hostname,
             warc_target_path=parse_url.path,
             warc_target_query_string=parse_url.query,
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
-            title=doc.title,
+            title=metadata_for_doc['title'],
             meta_keywords=None,
             meta_desc=None,
             body=main_content,
