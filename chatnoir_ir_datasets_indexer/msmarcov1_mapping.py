@@ -98,7 +98,6 @@ class MsMarcoV1PassageMapping(DatasetMapping):
             warc_date=None,
             warc_record_id=None,
             warc_trec_id=doc.doc_id,
-            warc_target_uri=doc.url,
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
