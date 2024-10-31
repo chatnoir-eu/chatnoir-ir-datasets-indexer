@@ -38,8 +38,47 @@ s3cmd mb s3://corpus-trec-tot-2024
 s3cmd put corpus.jsonl s3://corpus-trec-tot-2024/corpus.jsonl
 ```
 
+export IR-dataset
+
+create documents.jsonl file (within tira repo, store in /mnt/ceph/tira for easy re-use):
+
+```
+./src/manage.py ...
+```
+
+Upload to S3:
+
+```
+s3cmd mb s3://corpus-msmarco-passage-v1
+s3cmd put /mnt/ceph/tira/data/publicly-shared-datasets/msmarco-passage-trec-dl-v1/documents.jsonl s3://corpus-msmarco-passage-v1/corpus.jsonl
+
+
+
+
 Create document offsets:
 ```
 ./chatnoir_ir_datasets_indexer/document_offsets.py --docno doc_id ~/.ir_datasets/trec-tot/2024/corpus.jsonl trec-tot-offsets.json.gz
+
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /mnt/ceph/tira/data/publicly-shared-datasets/msmarco-passage-trec-dl-v1/documents.jsonl msmarco-v1-passage-offsets.json.gz
+
+
+
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /mnt/ceph/tira/data/publicly-shared-datasets/ms-marco-document-v1/documents.jsonl msmarco-v1-document-offsets.json.gz
+
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /mnt/ceph/tira/data/publicly-shared-datasets/ms-marco-document-v2/documents.jsonl msmarco-v2-document-offsets.json.gz
+
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /mnt/ceph/tira/data/publicly-shared-datasets/ms-marco-passage-v2/documents.jsonl msmarco-v2-passage-offsets.json.gz
+
+
+
 ```
 
+Index:
+```
+python3 main.py \
+	--data-index chatnoir_data_trec_tot_2024 \
+	--meta-index chatnoir_meta_trec_tot_2024 \
+	--username USER \
+	--password PASSWORD \
+	trec-tot/2024
+```
