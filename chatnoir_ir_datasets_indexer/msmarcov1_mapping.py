@@ -59,7 +59,7 @@ class MsMarcoV1DocumentMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        raise ValueError('foo')
+        return Path('corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
         raise ValueError('Foo')
@@ -111,7 +111,7 @@ class MsMarcoV1PassageMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        raise ValueError('foo')
+        return Path('corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
         raise ValueError('foo')
