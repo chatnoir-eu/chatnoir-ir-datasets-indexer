@@ -91,7 +91,6 @@ class MsMarcoV1PassageMapping(DatasetMapping):
         )
 
     def data_record(self, doc: _DocumentType) -> Optional[_DataRecordType]:
-        parse_url = urlparse(doc.url)
         main_content = doc.default_text()
         return DataRecord(
             uuid=self.webis_id(doc),
@@ -100,9 +99,6 @@ class MsMarcoV1PassageMapping(DatasetMapping):
             warc_record_id=None,
             warc_trec_id=doc.doc_id,
             warc_target_uri=doc.url,
-            warc_target_hostname=parse_url.hostname,
-            warc_target_path=parse_url.path,
-            warc_target_query_string=parse_url.query,
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
