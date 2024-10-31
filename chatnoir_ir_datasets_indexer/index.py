@@ -11,8 +11,6 @@ from ir_datasets import load
 from ir_datasets.datasets.base import Dataset
 from ir_datasets.formats import GenericDoc
 from itertools import islice
-from resiliparse.extract.html2text import extract_plain_text
-from resiliparse.parse.html import HTMLTree
 from tqdm.auto import tqdm
 
 from chatnoir_ir_datasets_indexer import LOGGER
