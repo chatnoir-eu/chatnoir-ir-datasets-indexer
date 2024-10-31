@@ -345,18 +345,18 @@ def _dataset_mapping(dataset_id: str) -> DatasetMapping:
     if dataset_id.startswith("clueweb22"):
         from chatnoir_ir_datasets_indexer.clueweb22_mapping import ClueWeb22Mapping
         return ClueWeb22Mapping()
-    if dataset_id.startswith("msmarco-document"):
-        from chatnoir_ir_datasets_indexer.msmarcov1_mapping import MsMarcoV1DocumentMapping
-        return MsMarcoV1DocumentMapping()
-    if dataset_id.startswith("msmarco-passage"):
-        from chatnoir_ir_datasets_indexer.msmarcov1_mapping import MsMarcoV1PassageMapping
-        return MsMarcoV1PassageMapping()
     if dataset_id.startswith("msmarco-document-v2"):
         from chatnoir_ir_datasets_indexer.msmarcov2_mapping import MsMarcoV2DocumentMapping
         return MsMarcoV2DocumentMapping()
     if dataset_id.startswith("msmarco-passage-v2"):
         from chatnoir_ir_datasets_indexer.msmarcov2_mapping import MsMarcoV2PassageMapping
         return MsMarcoV2PassageMapping()
+    if dataset_id.startswith("msmarco-document"):
+        from chatnoir_ir_datasets_indexer.msmarcov1_mapping import MsMarcoV1DocumentMapping
+        return MsMarcoV1DocumentMapping()
+    if dataset_id.startswith("msmarco-passage"):
+        from chatnoir_ir_datasets_indexer.msmarcov1_mapping import MsMarcoV1PassageMapping
+        return MsMarcoV1PassageMapping()
     if dataset_id.startswith("msmarco-document-v2.1/segmented"):
         from chatnoir_ir_datasets_indexer.msmarcov21_mapping import MsMarcoV21SegmentedDocumentMapping
         return MsMarcoV21SegmentedDocumentMapping()
