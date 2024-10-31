@@ -17,13 +17,13 @@ class MsMarcoV1DocumentMapping(DatasetMapping):
 
     def __init__(self):
         with gzip.open('msmarco-v1-document-offsets.json.gz', 'rt') as f:
-            self.warc_offset = json.load(f)
+            self.warc_offsets = json.load(f)
 
     def record_time(self, doc: _DocumentType) -> datetime:
         return datetime.strptime('01/18', '%m/%y')
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        offset = self.warc_offset[doc.doc_id]
+        offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
             source_file='s3://corpus-msmarco-document-v1/corpus.jsonl',
             source_offset=offset['start'],
@@ -62,7 +62,7 @@ class MsMarcoV1DocumentMapping(DatasetMapping):
         return Path('corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
-        raise ValueError('Foo')
+        return self.warc_offsets[doc.doc_id]['start']
 
 class MsMarcoV1PassageMapping(DatasetMapping):
     num_data_shards = 40
@@ -77,10 +77,10 @@ class MsMarcoV1PassageMapping(DatasetMapping):
 
     def __init__(self):
         with gzip.open('msmarco-v1-passage-offsets.json.gz', 'rt') as f:
-            self.warc_offset = json.load(f)
+            self.warc_offsets = json.load(f)
 
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
-        offset = self.warc_offset[doc.doc_id]
+        offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
             source_file='s3://corpus-msmarco-passage-v1/corpus.jsonl',
             source_offset=offset['start'],
@@ -114,4 +114,4 @@ class MsMarcoV1PassageMapping(DatasetMapping):
         return Path('corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
-        raise ValueError('foo')
+        return self.warc_offsets[doc.doc_id]['start']
