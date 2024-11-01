@@ -19,6 +19,7 @@ class TirexMapping(DatasetMapping):
         with gzip.open(self.__corpus_prefix + '-offsets.json.gz', 'rt') as f:
             self.warc_offsets = json.load(f)
 
+    @property
     def corpus_prefix(self):
         return self.__corpus_prefix
 
