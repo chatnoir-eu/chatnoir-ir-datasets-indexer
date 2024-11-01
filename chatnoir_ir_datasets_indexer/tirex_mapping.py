@@ -50,7 +50,7 @@ class TirexMapping(DatasetMapping):
             warc_target_uri_hash=None,
             http_date=None,
             http_content_type="text/html",
-            title=doc.title hasattr(doc, 'title') else f'Document {doc.doc_id}',
+            title=doc.title if hasattr(doc, 'title') else f'Document {doc.doc_id}',
             meta_keywords=None,
             meta_desc=None,
             body=main_content,
