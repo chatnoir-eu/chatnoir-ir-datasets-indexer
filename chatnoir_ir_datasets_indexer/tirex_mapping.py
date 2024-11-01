@@ -29,7 +29,7 @@ class TirexMapping(DatasetMapping):
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
         offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
-            source_file=f's3://corpora-tirex-small/{self.corpus_prefix()}-corpus.jsonl',
+            source_file=f's3://corpora-tirex-small/{self.corpus_prefix}-corpus.jsonl',
             source_offset=offset['start'],
             content_length=offset['start'] - offset['start'],
             content_type='application/json',
@@ -64,7 +64,7 @@ class TirexMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        return Path(f'{self.corpus_prefix()}-corpus.jsonl')
+        return Path(f'{self.corpus_prefix}-corpus.jsonl')
 
     def warc_offset(self, doc: _DocumentType) -> int:
         return self.warc_offsets[doc.doc_id]['start']
