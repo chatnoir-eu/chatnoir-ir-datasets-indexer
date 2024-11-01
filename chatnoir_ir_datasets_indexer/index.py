@@ -342,6 +342,9 @@ class DatasetMapping(
 
 
 def _dataset_mapping(dataset_id: str) -> DatasetMapping:
+    if dataset_id in ('antique', 'cord19/fulltext', 'cranfield', 'argsme/2020-04-01/processed', 'medline/2004', 'medline/2017', 'nfcorpus', 'vaswani'):
+        from chatnoir_ir_datasets_indexer.tirex_mapping import TirexMapping
+        return TirexMapping(dataset_id)
     if dataset_id.startswith("clueweb22"):
         from chatnoir_ir_datasets_indexer.clueweb22_mapping import ClueWeb22Mapping
         return ClueWeb22Mapping()
