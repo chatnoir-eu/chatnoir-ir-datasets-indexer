@@ -14,7 +14,7 @@ from itertools import islice
 from tqdm.auto import tqdm
 
 from chatnoir_ir_datasets_indexer import LOGGER
-from chatnoir_ir_datasets_indexer.elasticsearch import index_action
+from chatnoir_ir_datasets_indexer.es import index_action
 from chatnoir_ir_datasets_indexer.html import extract_title, \
     extract_meta_description, extract_meta_keywords, \
     extract_headings
@@ -342,7 +342,11 @@ class DatasetMapping(
 
 
 def _dataset_mapping(dataset_id: str) -> DatasetMapping:
-    if dataset_id in ('antique', 'cord19/fulltext', 'cranfield', 'argsme/2020-04-01/processed', 'medline/2004', 'medline/2017', 'nfcorpus', 'vaswani'):
+    if dataset_id in ('antique', 'cord19/fulltext', 'cranfield', 'argsme/2020-04-01/processed', 'medline/2004', 'medline/2017', 'nfcorpus', 'vaswani', 'longeval-sci/2024-11/train'):
+        if dataset_id == 'longeval-sci/2024-11/train':
+            from ir_datasets_longeval import register
+            register('longeval-sci/2024-11/train')
+
         from chatnoir_ir_datasets_indexer.tirex_mapping import TirexMapping
         return TirexMapping(dataset_id)
     if dataset_id.startswith("clueweb22"):
