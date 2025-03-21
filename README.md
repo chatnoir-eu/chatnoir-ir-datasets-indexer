@@ -40,6 +40,20 @@ s3cmd mb s3://corpus-longeval-sci-2024-11
 s3cmd put corpus.jsonl s3://corpus-longeval-sci-2024-11/corpus.jsonl
 ```
 
+Document offsets:
+```
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /tmp/corpus.jsonl longeval-sci-offsets.json.gz
+```
+
+```
+python3 main.py \
+	--data-index chatnoir_data_longeval_sci_2024_11 \
+	--meta-index chatnoir_meta_longeval_sci_2024_11 \
+	--username USER \
+	--password PASSWORD \
+	longeval-sci/2024-11/train
+```
+
 ### TREC TOT
 
 `md5sum ~/.ir_datasets/trec-tot/2024/corpus.jsonl` gives: `0c535ac8d5cee481add41543bc8cb854`.
