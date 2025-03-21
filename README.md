@@ -28,6 +28,18 @@ pipenv run python -m chatnoir_ir_datasets_indexer
 
 ## Datasets in progress
 
+### LongEval-SCI
+
+```
+./manage.py ir_datasets_loader_cli --ir_datasets_id 'longeval-sci/2024-11/train' --output_dataset_path inputs --output_dataset_truth_path truths
+```
+
+Upload data to s3:
+```
+s3cmd mb s3://corpus-longeval-sci-2024-11
+s3cmd put corpus.jsonl s3://corpus-longeval-sci-2024-11/corpus.jsonl
+```
+
 ### TREC TOT
 
 `md5sum ~/.ir_datasets/trec-tot/2024/corpus.jsonl` gives: `0c535ac8d5cee481add41543bc8cb854`.
