@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 
 from chatnoir_ir_datasets_indexer import LOGGER
 from chatnoir_ir_datasets_indexer.es import index_action
-from chatnoir_ir_datasets_indexer.html import extract_title, \
+from chatnoir_ir_datasets_indexer.html_util import extract_title, \
     extract_meta_description, extract_meta_keywords, \
     extract_headings
 from chatnoir_ir_datasets_indexer.index_data import SETTINGS_DATA, \
