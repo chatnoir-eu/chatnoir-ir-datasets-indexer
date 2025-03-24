@@ -7,6 +7,7 @@ from click import option, argument, STRING, INT, command, BOOL
 from chatnoir_ir_datasets_indexer import LOGGER
 from chatnoir_ir_datasets_indexer.index import index
 from tirex_tracker import tracking, ExportFormat
+from pathlib import Path
 
 _DEFAULT_ES_HOST = "https://elasticsearch.srv.webis.de:9200"
 
@@ -87,7 +88,7 @@ def main(
         basicConfig()
         LOGGER.setLevel(INFO)
 
-    export_file_path = Path() / dataset_id.replace('/', '-') / 'index-metadata.yml'
+    export_file_path = Path('.metadata') / dataset_id.replace('/', '-') / 'index-metadata.yml'
     export_file_path.parent.mkdir(exist_ok=True, parents=True)
 
     with tracking(export_file_path=export_file_path, export_format=ExportFormat.IR_METADATA):
