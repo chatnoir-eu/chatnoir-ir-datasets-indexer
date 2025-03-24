@@ -6,6 +6,7 @@ from click import option, argument, STRING, INT, command, BOOL
 
 from chatnoir_ir_datasets_indexer import LOGGER
 from chatnoir_ir_datasets_indexer.index import index
+from tirex_tracker import tracking, ExportFormat
 
 _DEFAULT_ES_HOST = "https://elasticsearch.srv.webis.de:9200"
 
@@ -85,17 +86,22 @@ def main(
     if verbose:
         basicConfig()
         LOGGER.setLevel(INFO)
-    index(
-        es_host=host,
-        es_username=username,
-        es_password=password,
-        es_index_meta=meta_index,
-        es_index_data=data_index,
-        s3_bucket=bucket,
-        dataset_id=dataset,
-        start=start,
-        end=end,
-    )
+
+    export_file_path = Path() / dataset_id.replace('/', '-') / 'index-metadata.yml'
+    export_file_path.parent.mkdir(exist_ok=True, parents=True)
+
+    with tracking(export_file_path=export_file_path, export_format=ExportFormat.IR_METADATA):
+        index(
+            es_host=host,
+            es_username=username,
+            es_password=password,
+            es_index_meta=meta_index,
+            es_index_data=data_index,
+            s3_bucket=bucket,
+            dataset_id=dataset,
+            start=start,
+            end=end,
+        )
 
 
 if __name__ == '__main__':

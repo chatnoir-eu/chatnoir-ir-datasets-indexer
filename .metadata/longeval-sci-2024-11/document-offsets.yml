@@ -1,0 +1,98 @@
+ir_metadata.start
+implementation:
+  executable: null
+  python:
+    interactive: false
+    modules: 3.13.2
+    packages: [Brotli==1.1.0, Django==4.2.19, FastWARC==0.15.1, GitPython==3.1.44, PyYAML==6.0.2, Pygments==2.19.1, Resiliparse==0.15.1, asgiref==3.8.1, asttokens==3.0.0, boto3==1.37.4, botocore==1.37.4, certifi==2025.1.31, click==8.1.8, decorator==5.2.1, django-cors-headers==4.7.0, django-countries==7.6.1, django-solo==2.4.0, django-webpack-loader==3.1.1, djangorestframework==3.15.2, elasticsearch-dsl==7.4.1, elasticsearch==7.17.12, executing==2.2.0, gitdb==4.0.12, importlib_metadata==8.6.1, importlib_resources==6.5.2, ipython==9.0.2, ipython_pygments_lexers==1.1.1, jedi==0.19.2, jmespath==1.0.1, matplotlib-inline==0.1.7, mistune==3.1.2, parso==0.8.4, pexpect==4.9.0, pip==24.3.1, prompt_toolkit==3.0.50, ptyprocess==0.7.0, pure_eval==0.2.3, python-dateutil==2.9.0.post0, python-frontmatter==1.1.0, ruamel.yaml==0.18.10, s3transfer==0.11.3, six==1.17.0, smmap==5.0.2, sqlparse==0.5.3, stack-data==0.6.3, tirex-tracker==0.2.7, tqdm==4.67.1, traitlets==5.14.3, typing==3.7.4.3, typing_extensions==4.12.2, tzdata==2025.1, uWSGI==2.0.28, urllib3==1.26.20, wcwidth==0.2.13, zipp==3.21.0]
+  script: {path: /home/maik/workspace/chatnoir-ir-datasets-indexer/chatnoir_ir_datasets_indexer/document_offsets.py}
+  source:
+    archive: {path: /home/maik/workspace/chatnoir-ir-datasets-indexer/.metadata/longeval-sci-2024-11/.tirex-tracker/code.zip, script path: chatnoir_ir_datasets_indexer/document_offsets.py}
+    branch: main
+    commit: 86555193e9bc890c6614559c63f899ada9969b9d
+    hash: 2c7d8dc1553d2627c219510ef79081dfafddad97
+    is repo: 1
+    lang: null
+    repository: null
+    tags: []
+    unchecked files: 1
+    uncommitted changes: 0
+    unpushed changes: 1
+    upstream branch: null
+method: {description: "ChatNoir uses an object storage for random document access to show the indexed versions of documents.\n\nFor this, ChatNoir uploads the data to an object storage (S3 at the moment) and uses offsets in the uploaded data for random document acccess.\nThis step calculates the document offsets and stores them so that the indexing step that follows can add the information on how to access a document (i.e., S3 URL + offsets) into the index.", name: 'ChatNoir (Indexer: Document Offsets)'}
+platform:
+  hardware:
+    cpu:
+      architecture: x86_64
+      byte order: Little Endian
+      caches: {l1d: 576 KiB, l1i: 384 KiB, l2: 7680 KiB, l3: 18432 KiB}
+      features: rdtsc rdtscp rdpid mwait fxsave xsave fpu mmx mmx_plus prefetchw daz sse sse2 sse3 ssse3 sse4_1 sse4_2 avx avxvnni fma3 f16c avx2 cmov cmpxchg8b cmpxchg16b clwb movbe lahf_sahf lzcnt popcnt bmi bmi2 adx aes vaes pclmulqdq vpclmulqdq gfni rdrand rdseed sha
+      frequency:
+        avg: 0
+        max: 0
+        min: 0
+        timeseries:
+          timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6023ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12040ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18057ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25077ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33100ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46138ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+          values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      frequency max: 4700000 MHz
+      frequency min: 400000 MHz
+      model: Intel 12th Gen Core i7-1260P
+      number of cores: 12
+      threads per core: 1
+      vendor id: Intel Corporation
+      virtualization: null
+    gpu: {memory: '2147, MB', model: 'NVIDIA GeForce MX550,', number of cores: '1024,', supported: 1}
+    ram: 33338 MB
+  operating system: {distribution: Arch Linux, kernel: Linux 6.12.19-1-lts x86_64}
+  software: {}
+resources:
+  cpu:
+    used process:
+      avg: 0
+      max: 101
+      min: 0
+      timeseries:
+        timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6023ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12040ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18057ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25077ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33100ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46138ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+        values: [99, 100, 99, 99, 99, 100, 99, 100, 99, 99, 100, 99, 99, 99, 100, 99, 100, 99, 100, 99, 100, 99, 99, 99, 99, 100, 100, 99, 100, 99, 99, 100, 99, 100, 100, 99, 99, 100, 99, 100, 99, 99, 100, 99, 100, 100, 99, 99, 99, 101, 99, 99]
+    used system:
+      avg: 0
+      max: 16
+      min: 0
+      timeseries:
+        timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6023ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12040ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18057ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25077ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33100ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46138ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+        values: [8, 9, 8, 8, 8, 8, 8, 8, 8, 8, 8, 10, 14, 8, 15, 8, 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 9, 10, 16, 7, 7, 7, 7, 7, 8, 7, 7, 7, 8, 7, 7, 7, 8, 7, 7, 7, 7, 7, 8, 7]
+  gpu:
+    used process: TODO
+    used system:
+      avg: 0
+      max: 0
+      min: 0
+      timeseries:
+        timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6022ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12039ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18056ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25076ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33099ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46137ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+        values: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    vram used process: TODO
+    vram used system:
+      avg: 0
+      max: 386
+      min: 0
+      timeseries:
+        timestamps: [1005ms, 2009ms, 3012ms, 4014ms, 5017ms, 6020ms, 7023ms, 8025ms, 9028ms, 10031ms, 11034ms, 12037ms, 13040ms, 14043ms, 15045ms, 16048ms, 17051ms, 18054ms, 19057ms, 20060ms, 21063ms, 22065ms, 23068ms, 24071ms, 25074ms, 26077ms, 27080ms, 28082ms, 29085ms, 30088ms, 31091ms, 32094ms, 33097ms, 34100ms, 35103ms, 36106ms, 37108ms, 38111ms, 39114ms, 40117ms, 41120ms, 42123ms, 43126ms, 44129ms, 45132ms, 46135ms, 47138ms, 48141ms, 49144ms, 50147ms, 51149ms, 52152ms]
+        values: [386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386, 386]
+  ram:
+    used process:
+      avg: 0
+      max: 1038618
+      min: 0
+      timeseries:
+        timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6023ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12040ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18057ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25077ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33100ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46138ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+        values: [126107, 165904, 202211, 246710, 277512, 308314, 358952, 395522, 431960, 467611, 492122, 513486, 530264, 550842, 599928, 618934, 639512, 660746, 682897, 704786, 726806, 748564, 769667, 807600, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618, 1038618]
+    used system:
+      avg: 0
+      max: 25230
+      min: 0
+      timeseries:
+        timestamps: [1009ms, 2011ms, 3014ms, 4017ms, 5020ms, 6023ms, 7025ms, 8028ms, 9031ms, 10034ms, 11037ms, 12040ms, 13042ms, 14045ms, 15048ms, 16051ms, 17054ms, 18057ms, 19059ms, 20062ms, 21065ms, 22068ms, 23071ms, 24074ms, 25077ms, 26079ms, 27082ms, 28085ms, 29088ms, 30091ms, 31094ms, 32097ms, 33100ms, 34102ms, 35105ms, 36108ms, 37111ms, 38114ms, 39117ms, 40120ms, 41123ms, 42126ms, 43129ms, 44132ms, 45135ms, 46138ms, 47140ms, 48143ms, 49146ms, 50149ms, 51152ms, 52155ms]
+        values: [23946, 23992, 24023, 24048, 24111, 24149, 24214, 24241, 24290, 24331, 24364, 24419, 24767, 24675, 25039, 24934, 24916, 24904, 24919, 24916, 24944, 24924, 24949, 24930, 25137, 25117, 25081, 25075, 25177, 25214, 25230, 25049, 25042, 25053, 25035, 25015, 25024, 25008, 24997, 24986, 25001, 24989, 24983, 24984, 24978, 24954, 24943, 24920, 24898, 24879, 24871, 24857]
+  runtime: {system: 1480 ms, user: 51210 ms, wallclock: 52626 ms}
+schema version: 0.2
+ir_metadata.end

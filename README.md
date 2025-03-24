@@ -49,11 +49,11 @@ Document offsets:
 ```
 
 ```
+export ES_PASSWORD=PASSWORD
+export ES_USERNAME=USER
 python3 main.py \
 	--data-index chatnoir_data_longeval_sci_2024_11 \
 	--meta-index chatnoir_meta_longeval_sci_2024_11 \
-	--username USER \
-	--password PASSWORD \
 	longeval-sci/2024-11/train
 ```
 
