@@ -12,7 +12,7 @@ implementation:
     hash: 98c3abfd576fb55e8a5507eaa7be5689d8499c6d
     is repo: 1
     lang: null
-    repository: null
+    repository: git@github.com:chatnoir-eu/chatnoir-ir-datasets-indexer.git
     tags: []
     unchecked files: 1
     uncommitted changes: 1
