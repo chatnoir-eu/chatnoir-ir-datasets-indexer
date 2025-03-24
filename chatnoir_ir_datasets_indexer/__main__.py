@@ -88,7 +88,7 @@ def main(
         basicConfig()
         LOGGER.setLevel(INFO)
 
-    export_file_path = Path('.metadata') / dataset_id.replace('/', '-') / 'index-metadata.yml'
+    export_file_path = Path('.metadata') / dataset.replace('/', '-') / 'index-metadata.yml'
     export_file_path.parent.mkdir(exist_ok=True, parents=True)
 
     with tracking(export_file_path=export_file_path, export_format=ExportFormat.IR_METADATA):
