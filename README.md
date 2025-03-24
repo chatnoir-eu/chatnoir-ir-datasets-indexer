@@ -40,7 +40,9 @@ mkdir .metadata/longeval-sci-2024-11
 
 Upload data to s3:
 ```
-s3cmd put corpus.jsonl s3://corpora-tirex-small/longeval-sci-2024-11-train-corpus.jsonl
+wget https://github.com/tira-io/tirex-tracker/releases/download/0.2.7/measure-0.2.7-linux -O tirex-tracker
+chmod +x tirex-tracker
+./tirex-tracker --poll-intervall 2000 -f object-storage-upload.yml -o 's3cmd put longeval-sci-2024-11-train-corpus.jsonl s3://corpora-tirex-small/longeval-sci-2024-11-train-corpus.jsonl'
 ```
 
 Document offsets:
