@@ -19,7 +19,7 @@ implementation:
     uncommitted changes: 0
     unpushed changes: 1
     upstream branch: null
-method: {description: "ChatNoir uses an object storage for random document access to show the indexed versions of documents.\n\nFor this, ChatNoir uploads the data to an object storage (S3 at the moment) and uses offsets in the uploaded data for random document acccess.\nThis step calculates the document offsets and stores them so that the indexing step that follows can add the information on how to access a document (i.e., S3 URL + offsets) into the index.", name: 'ChatNoir (Indexer: Document Offsets)'}
+method: {description: "Indexing corpora to ChatNoir with the ir-datasets indexer is a three step process where (1) the corpus is uploaded to an remote object storage, (2) document offsets are extracted for random document offset, and (3) documents are indexed to an remote ElasticSearch cluster.\n\nThis process conducted step two and extracted the random document offsets. I.e., we calculated the document offsets and stored them so that the indexing step can, in step 3, add the information on how to access a document (i.e., S3 URL + offsets) into the index.", name: 'ChatNoir (Indexer: Document Offsets)'}
 platform:
   hardware:
     cpu:
