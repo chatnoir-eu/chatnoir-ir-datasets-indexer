@@ -31,18 +31,21 @@ pipenv run python -m chatnoir_ir_datasets_indexer
 ### LongEval-SCI
 
 ```
+mkdir .metadata/longeval-sci-2024-11
+```
+
+```
 ./manage.py ir_datasets_loader_cli --ir_datasets_id 'longeval-sci/2024-11/train' --output_dataset_path inputs --output_dataset_truth_path truths
 ```
 
 Upload data to s3:
 ```
-s3cmd mb s3://corpus-longeval-sci-2024-11
-s3cmd put corpus.jsonl s3://corpus-longeval-sci-2024-11/corpus.jsonl
+s3cmd put corpus.jsonl s3://corpora-tirex-small/longeval-sci-2024-11-train-corpus.jsonl
 ```
 
 Document offsets:
 ```
-./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno /tmp/corpus.jsonl longeval-sci-offsets.json.gz
+./chatnoir_ir_datasets_indexer/document_offsets.py --docno docno .metadata/longeval-sci-2024-11/longeval-sci-2024-11-train-corpus.jsonl .metadata/longeval-sci-2024-11/longeval-sci-offsets.json.gz
 ```
 
 ```

@@ -8,8 +8,8 @@ import gzip
 import json
 
 class TirexMapping(DatasetMapping):
-    num_data_shards = 10
-    num_data_replicas = 3
+    num_data_shards = 1
+    num_data_replicas = 4
     num_meta_shards = 1
     num_meta_replicas = 3
     base_dir = Path('.')
