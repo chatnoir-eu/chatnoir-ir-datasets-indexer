@@ -342,13 +342,19 @@ class DatasetMapping(
 
 
 def _dataset_mapping(dataset_id: str) -> DatasetMapping:
-    if dataset_id in ('antique', 'cord19/fulltext', 'cranfield', 'argsme/2020-04-01/processed', 'medline/2004', 'medline/2017', 'nfcorpus', 'vaswani', 'longeval-sci/2024-11/train'):
+    if dataset_id in ('antique', 'cord19/fulltext', 'cranfield', 'argsme/2020-04-01/processed', 'medline/2004', 'medline/2017', 'nfcorpus', 'vaswani', 'longeval-sci/2024-11/train', 'wows/owi/2025'):
+        suffix = ".jsonl"
         if dataset_id == 'longeval-sci/2024-11/train':
             from ir_datasets_longeval import register
             register('longeval-sci/2024-11/train')
 
+        if dataset_id.startswith("wows/owi/"):
+            from ir_datasets_owi import register_to_ir_datasets
+            register_to_ir_datasets()
+            suffix = "jsonl.gz"
+
         from chatnoir_ir_datasets_indexer.tirex_mapping import TirexMapping
-        return TirexMapping(dataset_id)
+        return TirexMapping(dataset_id, suffix)
     if dataset_id.startswith("clueweb22"):
         from chatnoir_ir_datasets_indexer.clueweb22_mapping import ClueWeb22Mapping
         return ClueWeb22Mapping()
@@ -376,6 +382,7 @@ def _dataset_mapping(dataset_id: str) -> DatasetMapping:
     if dataset_id == 'trec-tot/2024':
         from chatnoir_ir_datasets_indexer.trec_tot_2024_mapping import TrecTot2024DocumentMapping
         return TrecTot2024DocumentMapping()
+
     raise NotImplementedError(
         f"Dataset mapping for ir_datasets {dataset_id} is not implemented yet."
     )

@@ -14,8 +14,9 @@ class TirexMapping(DatasetMapping):
     num_meta_replicas = 3
     base_dir = Path('.')
 
-    def __init__(self, dataset_id):
+    def __init__(self, dataset_id, suffix=".jsonl"):
         self.__corpus_prefix = dataset_id.replace('/', '-').lower()
+        self.__suffix = suffix
         with gzip.open(self.__corpus_prefix + '-offsets.json.gz', 'rt') as f:
             self.warc_offsets = json.load(f)
 
@@ -29,7 +30,7 @@ class TirexMapping(DatasetMapping):
     def meta_record(self, doc: _DocumentType, s3_bucket: str) -> Optional[_MetaRecordType]:
         offset = self.warc_offsets[doc.doc_id]
         return MetaRecord(
-            source_file=f's3://corpora-tirex-small/{self.corpus_prefix}-corpus.jsonl',
+            source_file=f's3://corpora-tirex-small/{self.corpus_prefix}-corpus' + self.__suffix,
             source_offset=offset['start'],
             content_length=offset['start'] - offset['start'],
             content_type='application/json',
@@ -64,7 +65,7 @@ class TirexMapping(DatasetMapping):
         )
 
     def warc_path(self, doc: _DocumentType) -> Path:
-        return Path(f'{self.corpus_prefix}-corpus.jsonl')
+        return Path(f'{self.corpus_prefix}-corpus' + self.__suffix)
 
     def warc_offset(self, doc: _DocumentType) -> int:
         return self.warc_offsets[doc.doc_id]['start']
