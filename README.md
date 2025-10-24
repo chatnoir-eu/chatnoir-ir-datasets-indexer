@@ -28,6 +28,20 @@ pipenv run python -m chatnoir_ir_datasets_indexer
 
 ## Datasets in progress
 
+### wows-owi-2025
+
+
+```
+mkdir .metadata/wows-owi-2025
+```
+
+```
+PYTHONPATH=/home/maik/workspace/wows-code/conf26/ir_datasets_wows ./chatnoir_ir_datasets_indexer/document_jsonl.py
+```
+
+
+
+
 ### LongEval-SCI
 
 ```
