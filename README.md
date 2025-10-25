@@ -36,9 +36,26 @@ mkdir .metadata/wows-owi-2025
 ```
 
 ```
-PYTHONPATH=/home/maik/workspace/wows-code/conf26/ir_datasets_wows ./chatnoir_ir_datasets_indexer/document_jsonl.py
+PYTHONPATH=/home/webis/wows-code/conf26/ir_datasets_wows ./chatnoir_ir_datasets_indexer/document_jsonl.py
 ```
 
+Upload data to s3:
+```
+wget https://github.com/tira-io/tirex-tracker/releases/download/0.2.7/measure-0.2.7-linux -O tirex-tracker
+chmod +x tirex-tracker
+./tirex-tracker --poll-interval 2000 -o  object-storage-upload.yml 's3cmd put wows-owi-2025/documents.jsonl.gz s3://corpora-tirex-small/wows-owi-2025-corpus.jsonl.gz'
+```
+
+Index to ChatNoir:
+
+```
+export ES_PASSWORD=PASSWORD
+export ES_USERNAME=USER
+PYTHONPATH=.:/home/webis/wows-code/conf26/ir_datasets_wows python3 main.py \
+	--data-index chatnoir_data_wows-owi-2025 \
+	--meta-index chatnoir_meta_wows-owi-2025 \
+	wows/owi/2025
+```
 
 
 
